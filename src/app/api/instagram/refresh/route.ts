@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseService } from '@/lib/supabase';
+import { getSupabaseService } from '@/lib/supabase-server';
 
 /**
  * API Route to refresh the Instagram Long-Lived Access Token.
