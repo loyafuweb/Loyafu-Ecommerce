@@ -85,3 +85,16 @@ export function getWholesalePrice(product: Product): string | null {
 
     return null;
 }
+
+export function getWholesaleMin(product: Product): number | null {
+    if (product.wholesaleMin) return product.wholesaleMin;
+    if (!product.description) return null;
+
+    // Regex to match "a partir de X unidades" or "a partir de X unid"
+    const minMatch = product.description.match(/a partir de\s*(\d+)\s*unid/i);
+    if (minMatch && minMatch[1]) {
+        return parseInt(minMatch[1]);
+    }
+
+    return null;
+}

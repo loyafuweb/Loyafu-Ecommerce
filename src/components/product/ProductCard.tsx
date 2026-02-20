@@ -6,7 +6,7 @@ import { useCartStore, Product } from '@/store/useCartStore';
 import { cn } from '@/lib/utils';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { useProductModalStore } from '@/store/useProductModalStore';
-import { getProductDescription, getWholesalePrice } from '@/lib/product-descriptions';
+import { getProductDescription, getWholesalePrice, getWholesaleMin } from '@/lib/product-descriptions';
 import { useToastStore } from '@/components/ui/Toast';
 import { useState, useEffect } from 'react';
 
@@ -229,8 +229,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                                     )}
                                 </span>
                                 {wholesalePriceDisplay && (
-                                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1 border border-green-100">
+                                    <span className="text-[10px] md:text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-1 border border-green-100 flex items-center gap-1 w-fit">
                                         Mayor: {wholesalePriceDisplay}
+                                        {getWholesaleMin(product) && (
+                                            <span className="opacity-60 font-black">
+                                                (min. {getWholesaleMin(product)})
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                             </>
