@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
 export default function Cart() {
-    const { items, removeItem, updateQuantity, getTotal, currency, exchangeRate } = useCartStore();
+    const { items, removeItem, updateQuantity, updateItemColor, getTotal, currency, exchangeRate } = useCartStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -22,10 +22,10 @@ export default function Cart() {
     const currencySymbol = currency === 'USD' ? '$' : 'Bs.';
     const displayTotal = currency === 'USD' ? totalUSD : totalBs;
 
-    const handleQuantityChange = (id: string, current: number, delta: number) => {
+    const handleQuantityChange = (id: string, current: number, delta: number, color?: string) => {
         const newQuantity = current + delta;
         if (newQuantity < 1) return;
-        updateQuantity(id, newQuantity);
+        updateQuantity(id, newQuantity, color);
     };
 
     const generateWhatsAppLink = () => {
@@ -37,7 +37,9 @@ export default function Cart() {
             const price = isWholesale ? item.wholesalePrice : item.priceUSD;
             const displayPrice = currency === 'USD' ? price : price! * exchangeRate;
 
-            message += `- (${item.quantity}) ${item.name} - ${currencySymbol}${(displayPrice! * item.quantity).toFixed(2)}`;
+            message += `- (${item.quantity}) ${item.name}`;
+            if (item.selectedColor) message += ` [Tono: ${item.selectedColor}]`;
+            message += ` - ${currencySymbol}${(displayPrice! * item.quantity).toFixed(2)}`;
             if (isWholesale) message += " (Mayorista)";
             message += "\n";
         });
@@ -61,7 +63,7 @@ export default function Cart() {
                         <ShoppingBag className="w-12 h-12 text-primary/60" />
                     </div>
                 </div>
-                <h1 className="text-4xl font-black text-background-dark mb-4 tracking-tighter">Tu bolsa está vacía</h1>
+                <h1 className="text-4xl font-black text-background-dark mb-4 tracking-tighter uppercase italic">Tu bolsa está vacía</h1>
                 <p className="text-slate-500 max-w-sm mb-10 leading-relaxed font-medium">
                     Parece que aún no has descubierto tu próximo favorito. Explora nuestra colección curada y eleva tu rutina.
                 </p>
@@ -87,7 +89,7 @@ export default function Cart() {
                             <span className="w-6 h-[2px] bg-primary/30" />
                             Checkout
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black text-background-dark tracking-tighter">Mi Bolsa</h1>
+                        <h1 className="text-3xl md:text-4xl font-black text-background-dark tracking-tighter uppercase italic">Mi Bolsa</h1>
                     </div>
                     <p className="text-slate-400 font-medium text-sm">
                         Tienes <span className="text-primary font-bold">{items.length}</span> {items.length === 1 ? 'artículo' : 'artículos'} listo{items.length === 1 ? '' : 's'}.
@@ -105,7 +107,7 @@ export default function Cart() {
 
                             return (
                                 <div
-                                    key={item.id}
+                                    key={`${item.id}-${item.selectedColor || 'none'}`}
                                     className="group relative bg-white/40 backdrop-blur-sm p-2.5 md:p-4 rounded-[1.25rem] md:rounded-[1.5rem] flex flex-row items-center gap-3 md:gap-5 border border-primary/5 hover:border-primary/20 hover:bg-white transition-all duration-500 shadow-lg shadow-primary/5 animate-fadeInUp"
                                     style={{ animationDelay: `${index * 100}ms` }}
                                 >
@@ -121,20 +123,38 @@ export default function Cart() {
 
                                     {/* Product Info & Controls - Highly Organized for Mobile */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch py-1">
-                                        <div className="space-y-0 text-left">
+                                        <div className="space-y-1 text-left">
                                             <h3 className="font-black text-[13px] md:text-lg text-background-dark tracking-tight leading-tight truncate md:whitespace-normal group-hover:text-primary transition-colors">
                                                 {item.name}
                                             </h3>
-                                            <span className="text-[8px] md:text-[10px] bg-primary/5 text-primary-dark px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider inline-block">
-                                                {item.category}
-                                            </span>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-[8px] md:text-[10px] bg-primary/5 text-primary-dark px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider inline-block">
+                                                    {item.category}
+                                                </span>
+
+                                                {/* Color Selector */}
+                                                {item.colors && item.colors.length > 0 && (
+                                                    <div className="flex items-center gap-1.5 ml-1">
+                                                        <select
+                                                            value={item.selectedColor || ''}
+                                                            onChange={(e) => updateItemColor(item.id, item.selectedColor, e.target.value)}
+                                                            className="text-[9px] md:text-[11px] font-black uppercase tracking-widest bg-background-light border border-primary/10 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+                                                        >
+                                                            {!item.selectedColor && <option value="">Seleccionar Tono</option>}
+                                                            {item.colors.map(color => (
+                                                                <option key={color} value={color}>Tono: {color}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center justify-between mt-auto">
                                             {/* Quantity Selector - Compact for Mobile */}
                                             <div className="flex items-center bg-background-light p-0.5 rounded-lg md:rounded-xl border border-primary/10">
                                                 <button
-                                                    onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity, -1, item.selectedColor)}
                                                     className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg hover:bg-white hover:text-primary flex items-center justify-center transition-all text-slate-400 active:scale-90"
                                                     disabled={item.quantity <= 1}
                                                 >
@@ -144,7 +164,7 @@ export default function Cart() {
                                                     {item.quantity}
                                                 </span>
                                                 <button
-                                                    onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity, 1, item.selectedColor)}
                                                     className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg hover:bg-white hover:text-primary flex items-center justify-center transition-all text-slate-400 active:scale-90"
                                                 >
                                                     <Plus className="w-3 h-3 md:w-4 md:h-4" />
@@ -153,13 +173,13 @@ export default function Cart() {
 
                                             {/* Delete Button - Tucked away for cleanliness */}
                                             <button
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(item.id, item.selectedColor)}
                                                 className="p-2 text-slate-300 hover:text-red-500 transition-colors md:hidden"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(item.id, item.selectedColor)}
                                                 className="hidden md:flex text-[11px] font-black text-slate-300 hover:text-red-500 uppercase tracking-widest items-center gap-2 transition-colors py-2 px-3 hover:bg-red-50 rounded-xl"
                                             >
                                                 <Trash2 className="w-4 h-4" /> Eliminar

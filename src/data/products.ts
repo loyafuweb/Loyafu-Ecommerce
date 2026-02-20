@@ -11,7 +11,8 @@ export const PRODUCTS: Product[] = [
         image: '/products/salome-premium-01.png',
         images: ['/products/salome-premium-01.png', '/products/salome-premium-swatches.jpg'],
         wholesalePrice: 7.42,
-        wholesaleMin: 2
+        wholesaleMin: 2,
+        colors: ['A', 'B', 'C', 'D', 'E']
     },
     {
         id: 'salome-2',
@@ -22,7 +23,8 @@ export const PRODUCTS: Product[] = [
         image: '/products/salome-loose-01.png',
         images: ['/products/salome-loose-01.png', '/products/salome-loose-swatches.png'],
         wholesalePrice: 4.78,
-        wholesaleMin: 3
+        wholesaleMin: 3,
+        colors: ['01', '02', '03', '04']
     },
     {
         id: 'salome-3',
@@ -32,7 +34,8 @@ export const PRODUCTS: Product[] = [
         category: 'Salome Makeup',
         image: '/products/salome-compacto-doble.jpg',
         wholesalePrice: 4.48,
-        wholesaleMin: 3
+        wholesaleMin: 3,
+        colors: ['01', '02', '03', '04', '05', '06']
     },
     {
         id: 'salome-4',
@@ -42,7 +45,8 @@ export const PRODUCTS: Product[] = [
         category: 'Salome Makeup',
         image: '/products/salome-compacto-sencillo.jpg',
         wholesalePrice: 2.72,
-        wholesaleMin: 3
+        wholesaleMin: 3,
+        colors: ['01', '02', '03', '04', '05']
     },
     {
         id: 'salome-5',
@@ -62,7 +66,8 @@ export const PRODUCTS: Product[] = [
         image: '/products/salome-velvet-foundation.png',
         images: ['/products/salome-velvet-foundation.png', '/products/salome-velvet-swatches.png'],
         wholesalePrice: 2.50,
-        wholesaleMin: 2
+        wholesaleMin: 2,
+        colors: ['Natural', 'Beige', 'Sand', 'Honey']
     },
     {
         id: 'salome-7',

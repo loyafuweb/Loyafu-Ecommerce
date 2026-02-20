@@ -155,15 +155,24 @@ export default function Navbar() {
                         {/* Desktop Links with Active State & Dropdown */}
                         <div className="hidden md:flex items-center gap-1">
                             <Link
-                                href="/catalog"
+                                href="/"
                                 className={cn(
                                     "px-4 py-2 rounded-full text-sm font-bold transition-all",
-                                    isActive('/catalog') ? "bg-primary/10 text-primary" : "text-slate-700 hover:text-primary hover:bg-primary/5"
+                                    isActive('/') ? "bg-primary/10 text-primary" : "text-slate-700 hover:text-primary hover:bg-primary/5"
                                 )}
                             >
-                                Tienda
+                                Inicio
                             </Link>
 
+                            <Link
+                                href="/instructions"
+                                className={cn(
+                                    "px-4 py-2 rounded-full text-sm font-bold transition-all",
+                                    isActive('/instructions') ? "bg-primary/10 text-primary" : "text-slate-700 hover:text-primary hover:bg-primary/5"
+                                )}
+                            >
+                                Instrucciones
+                            </Link>
 
                             <Link
                                 href="/#promociones"
@@ -173,6 +182,16 @@ export default function Navbar() {
                                 )}
                             >
                                 Promociones
+                            </Link>
+
+                            <Link
+                                href="/catalog"
+                                className={cn(
+                                    "px-4 py-2 rounded-full text-sm font-bold transition-all",
+                                    isActive('/catalog') ? "bg-primary/10 text-primary" : "text-slate-700 hover:text-primary hover:bg-primary/5"
+                                )}
+                            >
+                                Tienda
                             </Link>
                         </div>
                     </div>

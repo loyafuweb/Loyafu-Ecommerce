@@ -12,19 +12,22 @@ export interface Product {
     wholesalePrice?: number;
     wholesaleMin?: number;
     badge?: 'nuevo' | 'promo' | 'agotado';
+    colors?: string[]; // Available colors/tones
 }
 
-interface CartItem extends Product {
+export interface CartItem extends Product {
     quantity: number;
+    selectedColor?: string;
 }
 
 interface CartState {
     items: CartItem[];
     currency: 'USD' | 'VES';
     exchangeRate: number; // VES per USD
-    addItem: (product: Product) => void;
-    removeItem: (productId: string) => void;
-    updateQuantity: (productId: string, quantity: number) => void;
+    addItem: (product: Product, color?: string) => void;
+    removeItem: (productId: string, color?: string) => void;
+    updateQuantity: (productId: string, quantity: number, color?: string) => void;
+    updateItemColor: (productId: string, oldColor: string | undefined, newColor: string) => void;
     setCurrency: (currency: 'USD' | 'VES') => void;
     setExchangeRate: (rate: number) => void;
     clearCart: () => void;
@@ -38,30 +41,75 @@ export const useCartStore = create<CartState>()(
             items: [],
             currency: 'USD',
             exchangeRate: 36.5, // Default mock rate, to be updated via API
-            addItem: (product) =>
+            addItem: (product, color) =>
                 set((state) => {
-                    const existingItem = state.items.find((item) => item.id === product.id);
+                    // Find item with same ID AND same color
+                    const existingItem = state.items.find(
+                        (item) => item.id === product.id && item.selectedColor === color
+                    );
+
                     if (existingItem) {
                         return {
                             items: state.items.map((item) =>
-                                item.id === product.id
+                                item.id === product.id && item.selectedColor === color
                                     ? { ...item, quantity: item.quantity + 1 }
                                     : item
                             ),
                         };
                     }
-                    return { items: [...state.items, { ...product, quantity: 1 }] };
+
+                    return {
+                        items: [...state.items, { ...product, quantity: 1, selectedColor: color }]
+                    };
                 }),
-            removeItem: (productId) =>
+            removeItem: (productId, color) =>
                 set((state) => ({
-                    items: state.items.filter((item) => item.id !== productId),
-                })),
-            updateQuantity: (productId, quantity) =>
-                set((state) => ({
-                    items: state.items.map((item) =>
-                        item.id === productId ? { ...item, quantity: Math.max(1, quantity) } : item
+                    items: state.items.filter(
+                        (item) => !(item.id === productId && item.selectedColor === color)
                     ),
                 })),
+            updateQuantity: (productId, quantity, color) =>
+                set((state) => ({
+                    items: state.items.map((item) =>
+                        (item.id === productId && item.selectedColor === color)
+                            ? { ...item, quantity: Math.max(1, quantity) }
+                            : item
+                    ),
+                })),
+            updateItemColor: (productId, oldColor, newColor) =>
+                set((state) => {
+                    // Check if there's already an item with the NEW color
+                    const existingWithNewColor = state.items.find(
+                        (item) => item.id === productId && item.selectedColor === newColor
+                    );
+
+                    if (existingWithNewColor) {
+                        // Merge them
+                        const sourceItem = state.items.find(
+                            (item) => item.id === productId && item.selectedColor === oldColor
+                        );
+                        if (!sourceItem) return state;
+
+                        return {
+                            items: state.items
+                                .filter((item) => !(item.id === productId && item.selectedColor === oldColor))
+                                .map((item) =>
+                                    (item.id === productId && item.selectedColor === newColor)
+                                        ? { ...item, quantity: item.quantity + sourceItem.quantity }
+                                        : item
+                                )
+                        };
+                    }
+
+                    // Just update the color
+                    return {
+                        items: state.items.map((item) =>
+                            (item.id === productId && item.selectedColor === oldColor)
+                                ? { ...item, selectedColor: newColor }
+                                : item
+                        )
+                    };
+                }),
             setCurrency: (currency) => set({ currency }),
             setExchangeRate: (rate) => set({ exchangeRate: rate }),
             clearCart: () => set({ items: [] }),
