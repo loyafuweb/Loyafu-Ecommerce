@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Zap, ShoppingBag, MessageCircle, Banknote, Sparkles, DollarSign } from 'lucide-react';
 import CombosSection from '@/components/home/CombosSection';
 import InstagramFeed from '@/components/home/InstagramFeed';
+import LocationSection from '@/components/home/LocationSection';
 import Testimonials from '@/components/home/Testimonials';
 import { PRODUCTS } from '@/data/products';
 
@@ -240,6 +241,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Location Section */}
+      <LocationSection />
 
       {/* Instagram Feed */}
       <InstagramFeed />

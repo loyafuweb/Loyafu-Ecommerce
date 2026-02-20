@@ -1,7 +1,8 @@
 "use client";
 
-import { Info, BookOpen, MessageCircle, HelpCircle } from 'lucide-react';
+import { Info, BookOpen, MessageCircle, HelpCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import LocationSection from '@/components/home/LocationSection';
 
 export default function Instructions() {
     return (
@@ -76,6 +77,17 @@ export default function Instructions() {
                         Contactar Soporte
                     </a>
                 </div>
+            </div>
+
+            <div className="pt-6">
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-4">
+                        <MapPin className="w-4 h-4" />
+                        Tienda Física
+                    </div>
+                    <h2 className="text-3xl font-black text-background-dark uppercase tracking-tight">Nuestra Ubicación</h2>
+                </div>
+                <LocationSection className="py-0 px-0" />
             </div>
 
             <div className="text-center pt-8">
