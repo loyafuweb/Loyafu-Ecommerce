@@ -25,7 +25,15 @@ export default function Home() {
 
           {/* Decorative Sticker */}
           <div className="absolute top-10 right-10 w-24 h-24 z-20 hidden lg:block animate-float">
-            <Image src="/assets/brand/sticker-02.png" alt="Sticker" width={100} height={100} className="object-contain rotate-12 opacity-80" />
+            <Image
+              src="/assets/brand/sticker-02.png"
+              alt="Sticker"
+              width={100}
+              height={100}
+              className="object-contain rotate-12 opacity-80"
+              priority
+              sizes="100px"
+            />
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 items-center z-10 w-full">
@@ -54,6 +62,8 @@ export default function Home() {
                   alt="Hero Animation"
                   fill
                   unoptimized // Important: Keeps the GIF animation playing smoothly
+                  priority
+                  sizes="(max-width: 768px) 100vw, 450px"
                   className="relative z-10 object-cover rounded-3xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"
                 />
 
@@ -213,6 +223,7 @@ export default function Home() {
                 src="/assets/home/wholesale_collage.jpg"
                 alt="Wholesale Makeup"
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

@@ -147,6 +147,7 @@ export default function InstagramFeed() {
                                         <Image
                                             src="/assets/brand/logo-footer.png"
                                             fill
+                                            sizes="(max-width: 768px) 112px, 192px"
                                             className="object-contain p-0.5"
                                             alt="Loyafu Profile"
                                         />
@@ -249,6 +250,7 @@ export default function InstagramFeed() {
                                             <Image
                                                 src={post.media_type === 'VIDEO' ? (post.thumbnail_url || '/assets/brand/pattern.jpg') : post.media_url}
                                                 fill
+                                                sizes="(max-width: 768px) 50vw, 320px"
                                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
                                                 alt={post.caption ? post.caption.slice(0, 30) : 'Instagram Post'}
                                                 unoptimized

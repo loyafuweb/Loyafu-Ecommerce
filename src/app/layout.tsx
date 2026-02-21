@@ -58,6 +58,7 @@ export default function RootLayout({
             fill
             className="object-cover opacity-[0.15]"
             priority
+            sizes="100vw"
           />
         </div>
 
