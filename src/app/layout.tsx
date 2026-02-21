@@ -33,6 +33,10 @@ const atlane = localFont({
 export const metadata: Metadata = {
   title: 'Loyafu | Glow Up Essentials',
   description: 'Premium personal care products for your best self.',
+  icons: {
+    icon: '/assets/brand/logo-footer.png',
+    apple: '/assets/brand/logo-footer.png',
+  }
 };
 
 import BottomNav from '@/components/layout/BottomNav';

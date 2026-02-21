@@ -140,16 +140,21 @@ export default function InstagramFeed() {
                     <div className="flex flex-col md:flex-row gap-5 md:gap-10 items-center md:items-start text-center md:text-left">
                         {/* Profile Picture with Instagram Gradient */}
                         <div className="relative flex-shrink-0">
-                            <div className="w-24 h-24 md:w-40 md:h-40 rounded-full p-1.5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
+                            <div className="w-28 h-28 md:w-48 md:h-48 rounded-full p-1.5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] shadow-2xl">
                                 <div className="w-full h-full rounded-full bg-white p-1">
                                     <div className="w-full h-full rounded-full relative overflow-hidden bg-slate-50 flex items-center justify-center">
-                                        <Logo className="absolute inset-0 w-full h-full p-4 md:p-7" />
+                                        <Image
+                                            src="/assets/brand/logo-footer.png"
+                                            fill
+                                            className="object-contain p-0.5"
+                                            alt="Loyafu Profile"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Profile Info & Stats */}
+                        {/* Profile Info & Bio */}
                         <div className="flex-1 space-y-5 md:space-y-6 w-full min-w-0">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-center justify-center md:justify-start gap-2">
@@ -167,22 +172,6 @@ export default function InstagramFeed() {
                                 >
                                     Follow
                                 </Link>
-                            </div>
-
-                            {/* Stats Inline - Responsive gaps */}
-                            <div className="flex items-center justify-center md:justify-start gap-3 min-[400px]:gap-6 md:gap-10 border-y md:border-none py-4 md:py-0 border-slate-100">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-base md:text-lg font-black text-background-dark">50</span>
-                                    <span className="text-[10px] min-[400px]:text-xs md:text-sm text-background-dark/80 font-medium">publicaciones</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-base md:text-lg font-black text-background-dark">14.1k</span>
-                                    <span className="text-[10px] min-[400px]:text-xs md:text-sm text-background-dark/80 font-medium">seguidores</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-base md:text-lg font-black text-background-dark">1.000</span>
-                                    <span className="text-[10px] min-[400px]:text-xs md:text-sm text-background-dark/80 font-medium">seguidos</span>
-                                </div>
                             </div>
 
                             {/* Bio Info with exact icons */}

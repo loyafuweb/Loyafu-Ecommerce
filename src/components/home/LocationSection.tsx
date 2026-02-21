@@ -75,7 +75,7 @@ export default function LocationSection({ className }: { className?: string }) {
                         </div>
 
                         <a
-                            href="https://maps.app.goo.gl/FvKmDk5Gk1p2Yv7L6" // Constructed search URL or exact link if known
+                            href="https://www.google.com/maps/search/?api=1&query=CC+Gran+Bazar+Centro+Valencia"
                             target="_blank"
                             className="inline-flex items-center gap-3 bg-background-dark text-white px-8 py-4 rounded-full font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl group"
                         >

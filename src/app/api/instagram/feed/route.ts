@@ -25,19 +25,30 @@ export async function GET() {
         }
 
         if (!token) {
-            console.warn('Instagram token not found in DB or Supabase not initialized, falling back to ENV');
-            token = process.env.NEXT_PUBLIC_INSTAGRAM_TOKEN || null;
+            const envToken = process.env.NEXT_PUBLIC_INSTAGRAM_TOKEN;
+            console.warn('Instagram token not found in Supabase. Checking ENV...');
+            console.log('ENV NEXT_PUBLIC_INSTAGRAM_TOKEN exists:', !!envToken);
+            console.log('ENV NEXT_PUBLIC_INSTAGRAM_TOKEN length:', envToken?.length || 0);
+            token = envToken || null;
         }
 
         if (!token) {
-            return NextResponse.json({ data: [] });
+            console.error('CRITICAL: Instagram token not found in Supabase OR Environment Variables');
+            return NextResponse.json({
+                error: 'Token missing',
+                debug: {
+                    supabase_initialized: !!supabase,
+                    env_token_exists: !!process.env.NEXT_PUBLIC_INSTAGRAM_TOKEN,
+                    env_fallback_attempted: true
+                }
+            }, { status: 401 });
         }
 
         return fetchInstagramData(token);
 
     } catch (error: any) {
-        console.error('Instagram feed route error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Instagram feed route exception:', error);
+        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
     }
 }
 
