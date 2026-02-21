@@ -246,6 +246,20 @@ export default function InstagramFeed() {
                                         unoptimized
                                     />
 
+                                    {/* Video / Carousel indicators for mobile visibility */}
+                                    <div className="absolute bottom-3 right-3 z-10 md:hidden">
+                                        {post.media_type === 'VIDEO' && (
+                                            <div className="bg-black/50 backdrop-blur-md p-1.5 rounded-full text-white">
+                                                <Play className="w-3 h-3 fill-current" />
+                                            </div>
+                                        )}
+                                        {post.media_type === 'CAROUSEL_ALBUM' && (
+                                            <div className="bg-black/50 backdrop-blur-md p-1.5 rounded-full text-white">
+                                                <Layers className="w-3 h-3" />
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* Badges */}
                                     {badge && (
                                         <div className={cn(

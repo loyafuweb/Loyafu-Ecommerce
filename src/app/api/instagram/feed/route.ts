@@ -56,12 +56,12 @@ async function fetchInstagramData(token: string) {
     try {
         // 1. Fetch User Data (Profile Info)
         const userRes = await fetch(`https://graph.instagram.com/me?fields=id,username,media_count,account_type&access_token=${token}`, {
-            next: { revalidate: 3600 }
+            next: { revalidate: 60 } // Reduced for debugging
         });
 
         // 2. Fetch Media Data (Posts)
         const mediaRes = await fetch(`https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=${token}`, {
-            next: { revalidate: 3600 }
+            next: { revalidate: 60 } // Reduced for debugging
         });
 
         if (!userRes.ok || !mediaRes.ok) {
@@ -71,6 +71,14 @@ async function fetchInstagramData(token: string) {
 
         const user = await userRes.json();
         const media = await mediaRes.json();
+
+        // Diagnostic logging for production Reels issue
+        if (media.data && media.data.length > 0) {
+            console.log(`Instagram API returned ${media.data.length} items.`);
+            media.data.slice(0, 10).forEach((item: any, i: number) => {
+                console.log(`Item ${i}: ID=${item.id}, Type=${item.media_type}, HasThumbnail=${!!item.thumbnail_url}`);
+            });
+        }
 
         return NextResponse.json({
             user: {
