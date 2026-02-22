@@ -21,8 +21,19 @@ export default function Cart() {
 
     if (!mounted) return null;
 
+    const isNationalShipping = deliveryMethod === 'national_shipping';
+
+    // Divisa is not allowed for national shipping. If selected somehow, fallback to pago_movil in UI
+    useEffect(() => {
+        if (isNationalShipping && paymentMethod === 'divisa') {
+            setPaymentMethod('pago_movil');
+        }
+    }, [isNationalShipping, paymentMethod, setPaymentMethod]);
+
     const subtotalUSD = getTotal();
-    const hasDiscount = paymentMethod === 'binance' || paymentMethod === 'divisa';
+    const hasDiscount = isNationalShipping
+        ? (paymentMethod === 'binance' || paymentMethod === 'pago_movil')
+        : (paymentMethod === 'binance' || paymentMethod === 'divisa');
     const discountAmount = hasDiscount ? subtotalUSD * 0.25 : 0;
     const totalUSD = subtotalUSD - discountAmount;
 
@@ -59,9 +70,20 @@ export default function Cart() {
 
         if (detailsToUse && deliveryMethod !== 'pickup') {
             message += `\n\n--- Datos de Envío ---`;
-            message += `\nEnvía: ${detailsToUse.senderName} (${detailsToUse.senderPhone})`;
-            message += `\nRecibe: ${detailsToUse.receiverName} (${detailsToUse.receiverPhone})`;
-            message += `\n📍 Ubicación: Adjuntar por Google Maps\n`;
+            if (deliveryMethod === 'national_shipping') {
+                message += `\nNombre completo: ${detailsToUse.receiverName}`;
+                message += `\nCédula: ${detailsToUse.idNumber}`;
+                message += `\nNúmero de teléfono: ${detailsToUse.receiverPhone}`;
+                message += `\nCorreo electrónico: ${detailsToUse.email}`;
+                message += `\nAgencia: ${detailsToUse.agency}`;
+                message += `\nDirección y nombre de la oficina: ${detailsToUse.agencyAddress}`;
+                if (detailsToUse.agencyCode) message += `\nCódigo de agencia: ${detailsToUse.agencyCode}`;
+                message += `\n\n* El envío es cobro destino\n`;
+            } else {
+                message += `\nEnvía: ${detailsToUse.senderName} (${detailsToUse.senderPhone})`;
+                message += `\nRecibe: ${detailsToUse.receiverName} (${detailsToUse.receiverPhone})`;
+                message += `\n📍 Ubicación: Adjuntar por Google Maps\n`;
+            }
         }
 
         message += `\n💳 Método de Pago: ${paymentMethod === 'binance' ? 'Binance' : paymentMethod === 'divisa' ? 'Divisa (Efectivo)' : 'Pago Móvil'}\n`;
@@ -300,28 +322,31 @@ export default function Cart() {
                                         </div>
                                         <div className="grid grid-cols-3 gap-1.5">
                                             {[
-                                                { id: 'pago_movil', label: 'Pago Móvil' },
-                                                { id: 'divisa', label: 'Divisa', discount: true },
+                                                { id: 'pago_movil', label: 'Pago Móvil', discount: isNationalShipping },
+                                                { id: 'divisa', label: 'Divisa', discount: !isNationalShipping, disabled: isNationalShipping },
                                                 { id: 'binance', label: 'Binance', discount: true }
-                                            ].map((method) => (
-                                                <button
-                                                    key={method.id}
-                                                    onClick={() => setPaymentMethod(method.id as any)}
-                                                    className={cn(
-                                                        "relative py-2.5 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all border",
-                                                        paymentMethod === method.id
-                                                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105 z-10"
-                                                            : "bg-[#2a2435] text-slate-400 border-white/5 hover:bg-[#342e40]"
-                                                    )}
-                                                >
-                                                    {method.label}
-                                                    {method.discount && (
-                                                        <span className="absolute -top-1.5 -right-1 bg-green-500 text-white text-[6px] px-1 rounded-full animate-pulse shadow-sm shadow-green-500/50">
-                                                            -25%
-                                                        </span>
-                                                    )}
-                                                </button>
-                                            ))}
+                                            ].map((method) => {
+                                                if (method.disabled) return null;
+                                                return (
+                                                    <button
+                                                        key={method.id}
+                                                        onClick={() => setPaymentMethod(method.id as any)}
+                                                        className={cn(
+                                                            "relative py-2.5 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all border",
+                                                            paymentMethod === method.id
+                                                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105 z-10"
+                                                                : "bg-[#2a2435] text-slate-400 border-white/5 hover:bg-[#342e40]"
+                                                        )}
+                                                    >
+                                                        {method.label}
+                                                        {method.discount && (
+                                                            <span className="absolute -top-1.5 -right-1 bg-green-500 text-white text-[6px] px-1 rounded-full animate-pulse shadow-sm shadow-green-500/50">
+                                                                -25%
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 </div>
@@ -422,28 +447,31 @@ export default function Cart() {
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
-                                        { id: 'pago_movil', label: 'Pago Móvil' },
-                                        { id: 'divisa', label: 'Divisa', discount: true },
+                                        { id: 'pago_movil', label: 'Pago Móvil', discount: isNationalShipping },
+                                        { id: 'divisa', label: 'Divisa', discount: !isNationalShipping, disabled: isNationalShipping },
                                         { id: 'binance', label: 'Binance', discount: true }
-                                    ].map((method) => (
-                                        <button
-                                            key={method.id}
-                                            onClick={() => setPaymentMethod(method.id as any)}
-                                            className={cn(
-                                                "relative py-3 rounded-[1.25rem] text-[10px] font-black uppercase tracking-tight transition-all border",
-                                                paymentMethod === method.id
-                                                    ? "bg-primary text-white border-primary shadow-[0_8px_16px_rgba(157,51,247,0.3)]"
-                                                    : "bg-[#251e30] border-transparent text-[#9a93ab] hover:bg-[#2d2539]"
-                                            )}
-                                        >
-                                            {method.label}
-                                            {method.discount && (
-                                                <span className="absolute -top-1.5 -right-1 bg-[#1fe96c] text-[#124225] font-black text-[8px] px-1.5 py-0.5 rounded-md shadow-md">
-                                                    -25%
-                                                </span>
-                                            )}
-                                        </button>
-                                    ))}
+                                    ].map((method) => {
+                                        if (method.disabled) return null;
+                                        return (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => setPaymentMethod(method.id as any)}
+                                                className={cn(
+                                                    "relative py-3 rounded-[1.25rem] text-[10px] font-black uppercase tracking-tight transition-all border",
+                                                    paymentMethod === method.id
+                                                        ? "bg-primary text-white border-primary shadow-[0_8px_16px_rgba(157,51,247,0.3)]"
+                                                        : "bg-[#251e30] border-transparent text-[#9a93ab] hover:bg-[#2d2539]"
+                                                )}
+                                            >
+                                                {method.label}
+                                                {method.discount && (
+                                                    <span className="absolute -top-1.5 -right-1 bg-[#1fe96c] text-[#124225] font-black text-[8px] px-1.5 py-0.5 rounded-md shadow-md">
+                                                        -25%
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

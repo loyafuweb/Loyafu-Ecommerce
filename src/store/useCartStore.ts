@@ -25,9 +25,15 @@ export type DeliveryMethod = 'pickup' | 'local_delivery' | 'national_shipping';
 export interface DeliveryDetails {
     senderName: string;
     senderPhone: string;
-    receiverName: string;
+    receiverName: string; // Used mostly for local delivery logic, but can be same as sender in national
     receiverPhone: string;
     needsLocationLink: boolean;
+    // Specifics for National Shipping
+    idNumber?: string;
+    email?: string;
+    agency?: string;
+    agencyAddress?: string;
+    agencyCode?: string;
 }
 
 interface CartState {
