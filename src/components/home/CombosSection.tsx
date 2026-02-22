@@ -13,8 +13,8 @@ export default function CombosSection() {
                         <Sparkles className="w-4 h-4" />
                         Ofertas Especiales
                     </span>
-                    <h2 className="text-4xl md:text-5xl font-black text-background-dark tracking-tight">
-                        Combos Emprendedores
+                    <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-background-dark tracking-tighter uppercase font-brand italic leading-[0.85]">
+                        COMBOS <span className="text-primary">EMPRENDEDORES</span>
                     </h2>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium">
                         Inicia tu negocio con nuestros paquetes todo-en-uno. ¡Máxima rentabilidad asegurada!

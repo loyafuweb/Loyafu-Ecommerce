@@ -17,9 +17,9 @@ export default function LocationSection({ className }: { className?: string }) {
                         </div>
 
                         <div className="space-y-4">
-                            <h2 className="text-4xl md:text-6xl font-black text-background-dark tracking-tighter uppercase italic leading-[0.9]">
-                                Visítanos en <br />
-                                <span className="text-primary">Valencia</span>
+                            <h2 className="text-[10vw] md:text-6xl lg:text-7xl font-black tracking-tighter uppercase font-brand italic leading-[0.85] text-background-dark">
+                                VISÍTANOS EN <br />
+                                <span className="text-primary">VALENCIA</span>
                             </h2>
                             <p className="text-slate-500 text-lg font-medium max-w-md">
                                 Encuentra todo nuestro catálogo y atención personalizada en nuestra tienda física.

@@ -98,8 +98,8 @@ export default function Home() {
       <section className="py-10 md:py-20 px-6 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black text-background-dark">
-              ¿Cómo Comprar?
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase font-brand italic text-background-dark leading-[0.85]">
+              CÓMO <span className="text-primary">COMPRAR</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-2xl mx-auto">
               Tu pedido listo en 3 simples pasos. Fácil, rápido y seguro.
@@ -175,11 +175,9 @@ export default function Home() {
                 Oportunidad de Negocio
               </span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black leading-tight">
-              Emprende con <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-primary-light">
-                Loyafu Beauty
-              </span>
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase font-brand italic leading-[0.85] text-white">
+              EMPRENDE CON <br className="md:hidden" />
+              <span className="text-primary">LOYAFU BEAUTY</span>
             </h2>
             <p className="text-slate-300 text-lg leading-relaxed">
               Ofrecemos márgenes de ganancia competitivos para que inicies o hagas crecer tu negocio de maquillaje. Sin montos mínimos de compra global, solo mínimos por producto.
