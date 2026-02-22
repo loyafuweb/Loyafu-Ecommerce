@@ -15,20 +15,21 @@ export default function Cart() {
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'pago_movil' | 'binance' | 'divisa'>('pago_movil');
 
+    const isNationalShipping = deliveryMethod === 'national_shipping';
+
+    // Divisa is not allowed for national shipping. If selected somehow, fallback to pago_movil in UI
+    // Note: Hooks MUST be called before any early returns (like the !mounted check below)
+    useEffect(() => {
+        if (isNationalShipping && paymentMethod === 'divisa') {
+            setPaymentMethod('pago_movil');
+        }
+    }, [isNationalShipping, paymentMethod]);
+
     useEffect(() => {
         setMounted(true);
     }, []);
 
     if (!mounted) return null;
-
-    const isNationalShipping = deliveryMethod === 'national_shipping';
-
-    // Divisa is not allowed for national shipping. If selected somehow, fallback to pago_movil in UI
-    useEffect(() => {
-        if (isNationalShipping && paymentMethod === 'divisa') {
-            setPaymentMethod('pago_movil');
-        }
-    }, [isNationalShipping, paymentMethod, setPaymentMethod]);
 
     const subtotalUSD = getTotal();
     const hasDiscount = isNationalShipping
