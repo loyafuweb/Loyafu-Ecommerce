@@ -6,10 +6,13 @@ import { Minus, Plus, Trash2, Truck, ArrowRight, ShieldCheck, Leaf, MessageCircl
 import { useCartStore } from '@/store/useCartStore';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { DeliveryModal } from '@/components/cart/DeliveryModal';
+import { DeliveryDetails } from '@/store/useCartStore';
 
 export default function Cart() {
-    const { items, removeItem, updateQuantity, updateItemColor, getTotal, currency, exchangeRate, deliveryMethod, setDeliveryMethod } = useCartStore();
+    const { items, removeItem, updateQuantity, updateItemColor, getTotal, currency, exchangeRate, deliveryMethod, setDeliveryMethod, deliveryDetails, setDeliveryDetails } = useCartStore();
     const [mounted, setMounted] = useState(false);
+    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'pago_movil' | 'binance' | 'divisa'>('pago_movil');
 
     useEffect(() => {
@@ -32,7 +35,7 @@ export default function Cart() {
         updateQuantity(id, newQuantity, color);
     };
 
-    const generateWhatsAppLink = () => {
+    const generateWhatsAppLink = (detailsToUse: DeliveryDetails | null = deliveryDetails) => {
         const phone = "584244096534";
         let message = "Hola! Quiero realizar el siguiente pedido en Loyafu:\n\n";
 
@@ -48,12 +51,19 @@ export default function Cart() {
             message += "\n";
         });
 
-        // Delivery Method Text
         const deliveryText = deliveryMethod === 'pickup' ? 'Retiro en Tienda (CC Gran Bazar)' :
             deliveryMethod === 'local_delivery' ? 'Delivery Local (Valencia)' :
                 'Envío Nacional';
 
         message += `\n📦 Entrega: ${deliveryText}`;
+
+        if (detailsToUse && deliveryMethod !== 'pickup') {
+            message += `\n\n--- Datos de Envío ---`;
+            message += `\nEnvía: ${detailsToUse.senderName} (${detailsToUse.senderPhone})`;
+            message += `\nRecibe: ${detailsToUse.receiverName} (${detailsToUse.receiverPhone})`;
+            message += `\n📍 Ubicación: Adjuntar por Google Maps\n`;
+        }
+
         message += `\n💳 Método de Pago: ${paymentMethod === 'binance' ? 'Binance' : paymentMethod === 'divisa' ? 'Divisa (Efectivo)' : 'Pago Móvil'}\n`;
 
         if (hasDiscount) {
@@ -76,6 +86,14 @@ export default function Cart() {
         message += `\n* Precios no incluyen IVA.`;
 
         return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    };
+
+    const handleCheckout = () => {
+        if (deliveryMethod === 'pickup') {
+            window.open(generateWhatsAppLink(), '_blank');
+        } else {
+            setIsDeliveryModalOpen(true);
+        }
     };
 
     if (items.length === 0) {
@@ -333,15 +351,14 @@ export default function Cart() {
                                     * Nuestros precios no incluyen IVA
                                 </div>
 
-                                <a
-                                    href={generateWhatsAppLink()}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-sm shadow-2xl flex items-center justify-center gap-3 border-b-4 border-green-700 active:scale-[0.98] transition-all"
+                                {/* CTA WhatsApp Button (Mobile) */}
+                                <button
+                                    onClick={handleCheckout}
+                                    className="group w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-sm shadow-2xl flex items-center justify-center gap-3 border-b-4 border-green-700 active:scale-[0.98] transition-all cursor-pointer"
                                 >
                                     Pagar por WhatsApp
                                     <MessageCircle className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                                </a>
+                                </button>
                             </div>
                         </div>
 
@@ -458,15 +475,13 @@ export default function Cart() {
 
                             {/* CTA WhatsApp Button */}
                             <div className="pt-2">
-                                <a
-                                    href={generateWhatsAppLink()}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group w-full bg-[#1fe96c] text-[#124225] p-5 rounded-2xl font-black text-lg shadow-[0_10px_25px_rgba(31,233,108,0.2)] hover:bg-[#25ff78] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border-b-4 border-[#129d47]"
+                                <button
+                                    onClick={handleCheckout}
+                                    className="group w-full bg-[#1fe96c] text-[#124225] p-5 rounded-2xl font-black text-lg shadow-[0_10px_25px_rgba(31,233,108,0.2)] hover:bg-[#25ff78] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border-b-4 border-[#129d47] cursor-pointer"
                                 >
                                     Pagar por WhatsApp
                                     <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                                </a>
+                                </button>
                             </div>
 
                         </div>
@@ -474,6 +489,17 @@ export default function Cart() {
                 </div>
             </div>
 
+            <DeliveryModal
+                isOpen={isDeliveryModalOpen}
+                onClose={() => setIsDeliveryModalOpen(false)}
+                onConfirm={(details) => {
+                    setDeliveryDetails(details);
+                    setIsDeliveryModalOpen(false);
+                    // Open WhatsApp automatically upon saving details
+                    window.open(generateWhatsAppLink(details), '_blank');
+                }}
+                initialData={deliveryDetails}
+            />
         </div>
     );
 }
