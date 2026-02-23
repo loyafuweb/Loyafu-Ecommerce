@@ -19,20 +19,34 @@ export default function AdminLoginPage() {
         setLoading(true);
         setError(null);
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            // Debug check for variables in the actual browser bundle
+            const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            if (!url || url.includes('undefined')) {
+                setError("La configuración de Supabase no se ha inyectado aún en el navegador. Por favor recarga (F5) esta página completa.");
+                setLoading(false);
+                return;
+            }
 
-        if (error) {
-            setError(error.message);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                setError(error.message);
+                setLoading(false);
+                return;
+            }
+
+            if (data.session) {
+                router.push('/admin');
+                router.refresh();
+            }
+        } catch (err: any) {
+            console.error("Raw fetch exception:", err);
+            setError(`Error de red crítico (${err.message}). Intenta recargar la página (F5) o desactiva bloqueadores de anuncios.`);
             setLoading(false);
-            return;
-        }
-
-        if (data.session) {
-            router.push('/admin');
-            router.refresh();
         }
     };
 

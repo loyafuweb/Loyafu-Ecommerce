@@ -33,7 +33,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Token not found in database' }, { status: 404 });
         }
 
-        const currentToken = config.value;
+        const currentToken = configData.value;
 
         // 2. Refresh the token with Instagram API
         // https://developers.facebook.com/docs/instagram-basic-display-api/guides/long-lived-access-tokens#refresh-a-long-lived-access-token
