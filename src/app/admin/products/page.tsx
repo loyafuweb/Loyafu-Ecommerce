@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import {
     Plus,
@@ -17,9 +18,10 @@ import {
 import Link from 'next/link';
 import { useToastStore } from '@/components/ui/Toast';
 
-export default function AdminProductsPage() {
+function ProductsList() {
     const supabase = createSupabaseBrowserClient();
     const { showToast } = useToastStore();
+    const searchParams = useSearchParams();
 
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -29,11 +31,10 @@ export default function AdminProductsPage() {
 
     useEffect(() => {
         // Listen for category in URL
-        const params = new URLSearchParams(window.location.search);
-        const cat = params.get('category');
+        const cat = searchParams.get('category');
         if (cat) setSelectedCategory(cat);
         fetchProducts();
-    }, [window.location.search]);
+    }, [searchParams]);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -233,5 +234,18 @@ export default function AdminProductsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function AdminProductsPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="mt-4 text-[#a8a3b5] font-brand uppercase tracking-widest text-xs">Cargando inventario...</p>
+            </div>
+        }>
+            <ProductsList />
+        </Suspense>
     );
 }
