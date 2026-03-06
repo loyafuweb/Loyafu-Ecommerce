@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Minus, Plus, Trash2, Truck, ArrowRight, ShieldCheck, MessageCircle, ShoppingBag, Heart, ShoppingCart, Store, PackageCheck, Smartphone, Banknote, Bitcoin } from 'lucide-react';
+import { Minus, Plus, Trash2, Truck, ArrowRight, ShieldCheck, MessageCircle, ShoppingBag, Heart, ShoppingCart, Store, PackageCheck, Smartphone, Banknote, Bitcoin, RotateCcw } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import { useProductModalStore } from '@/store/useProductModalStore';
 import { PRODUCTS } from '@/data/products';
 
 export default function Cart() {
-    const { items, removeItem, updateQuantity, updateItemColor, getTotal, currency, exchangeRate, deliveryMethod, setDeliveryMethod, deliveryDetails, setDeliveryDetails } = useCartStore();
+    const { items, removeItem, updateQuantity, updateItemColor, getTotal, currency, exchangeRate, deliveryMethod, setDeliveryMethod, deliveryDetails, setDeliveryDetails, clearCart } = useCartStore();
     const openModal = useProductModalStore((state) => state.openModal);
     const { getSetting } = useSettings();
     const [mounted, setMounted] = useState(false);
@@ -163,7 +163,16 @@ export default function Cart() {
                 {/* Left Column: Cart items & Suggested */}
                 <div className="flex-1 space-y-10">
                     <div className="space-y-4">
-                        <h1 className="text-5xl md:text-6xl font-black text-background-dark tracking-tighter uppercase italic font-brand leading-[0.85]">Mi <span className="text-primary">Bolsa</span></h1>
+                        <div className="flex items-start justify-between gap-4">
+                            <h1 className="text-5xl md:text-6xl font-black text-background-dark tracking-tighter uppercase italic font-brand leading-[0.85]">Mi <span className="text-primary">Bolsa</span></h1>
+                            <button
+                                onClick={() => { if (confirm('¿Vaciar toda la bolsa?')) clearCart(); }}
+                                className="flex items-center gap-2 px-4 py-2.5 mt-1 rounded-full bg-red-50 text-red-500 border border-red-200 text-xs font-black uppercase hover:bg-red-500 hover:text-white transition-all flex-shrink-0"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Vaciar bolsa
+                            </button>
+                        </div>
 
                         {/* Cart Items */}
                         <div className="space-y-4">
@@ -205,6 +214,25 @@ export default function Cart() {
                                                     <p className="text-[7px] font-bold text-slate-400 mt-1">
                                                         Faltan <span className="text-primary">{item.wholesaleMin - item.quantity}</span> para precio especial
                                                     </p>
+                                                </div>
+                                            )}
+                                            {/* Color selector in cart */}
+                                            {item.colors && item.colors.length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                    {item.colors.map(color => (
+                                                        <button
+                                                            key={color}
+                                                            onClick={(e) => { e.stopPropagation(); updateItemColor(item.id, item.selectedColor, color); }}
+                                                            className={cn(
+                                                                "px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all",
+                                                                item.selectedColor === color
+                                                                    ? "bg-primary text-white border-primary"
+                                                                    : "bg-slate-50 text-slate-500 border-slate-200 hover:border-primary/40"
+                                                            )}
+                                                        >
+                                                            {color}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             )}
                                             <div className="flex items-center gap-3 mt-3">
@@ -351,9 +379,10 @@ export default function Cart() {
                                             {currency === 'USD' ? `$${totalUSD.toFixed(2)}` : `${totalBs.toFixed(2)} Bs`}
                                         </div>
                                     </div>
-                                    <div className="text-right pb-1">
-                                        {hasDiscount && <span className="bg-green-500/20 text-green-400 text-[9px] font-black px-2 py-0.5 rounded-full block mb-2 border border-green-500/30">25% OFF APLICADO</span>}
-                                        <span className="text-slate-500 font-bold text-xs tabular-nums">{currency === 'USD' ? `${totalBs.toFixed(2)} Bs` : `$${totalUSD.toFixed(2)}`}</span>
+                                    <div className="text-right pb-1 space-y-1">
+                                        {hasDiscount && <span className="bg-green-500/20 text-green-400 text-[9px] font-black px-2 py-0.5 rounded-full block border border-green-500/30">25% OFF APLICADO</span>}
+                                        <span className="text-slate-500 font-bold text-xs tabular-nums block">{currency === 'USD' ? `${totalBs.toFixed(2)} Bs` : `$${totalUSD.toFixed(2)}`}</span>
+                                        <span className="text-slate-600 text-[9px] font-medium tabular-nums block">Tasa BCV: {exchangeRate.toFixed(2)} Bs/$</span>
                                     </div>
                                 </div>
                             </div>

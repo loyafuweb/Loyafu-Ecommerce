@@ -28,13 +28,15 @@ export default function ProductModal() {
     const [dragY, setDragY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
 
-    // Sync local state when product changes
     useEffect(() => {
         if (selectedProduct) {
             setIsFavorite(isFavoriteStore(selectedProduct.id));
-            setAddedToCart(false); // Reset cart state on new product
-            setDragY(0); // Reset drag
+            setAddedToCart(false);
+            setDragY(0);
+            // Auto-select first color if product has colors
+            setSelectedColor(selectedProduct.colors && selectedProduct.colors.length > 0 ? selectedProduct.colors[0] : undefined);
         }
     }, [selectedProduct, isFavoriteStore, isOpen]);
 
@@ -93,8 +95,10 @@ export default function ProductModal() {
         }
     }
 
+    const hasColors = selectedProduct.colors && selectedProduct.colors.length > 0;
+
     const handleAddToCart = () => {
-        addToCart(selectedProduct);
+        addToCart(selectedProduct, selectedColor);
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
     };
@@ -150,12 +154,12 @@ export default function ProductModal() {
                 {/* Product Content Wrapper */}
                 <div className="flex flex-col md:flex-row h-full overflow-hidden">
                     {/* Left Side: Product Media (Desktop Only) */}
-                    <div className="hidden md:block w-1/2 bg-gray-50 relative md:min-h-full">
+                    <div className="hidden md:block w-1/2 bg-slate-100 relative md:min-h-full">
                         <Image
                             src={selectedProduct.image}
                             alt={selectedProduct.name}
                             fill
-                            className="object-cover"
+                            className="object-contain p-4"
                             priority
                         />
                     </div>
@@ -177,23 +181,23 @@ export default function ProductModal() {
                                 >
                                     {selectedProduct.images && selectedProduct.images.length > 0 ? (
                                         selectedProduct.images.map((img, idx) => (
-                                            <div key={idx} className="flex-shrink-0 w-full h-full relative snap-center">
+                                            <div key={idx} className="flex-shrink-0 w-full h-full relative snap-center bg-slate-100">
                                                 <Image
                                                     src={img}
                                                     alt={`${selectedProduct.name} ${idx + 1}`}
                                                     fill
-                                                    className="object-cover"
+                                                    className="object-contain p-3"
                                                     priority={idx === 0}
                                                 />
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="flex-shrink-0 w-full h-full relative snap-center">
+                                        <div className="flex-shrink-0 w-full h-full relative snap-center bg-slate-100">
                                             <Image
                                                 src={selectedProduct.image}
                                                 alt={selectedProduct.name}
                                                 fill
-                                                className="object-cover"
+                                                className="object-contain p-3"
                                                 priority
                                             />
                                         </div>
@@ -279,6 +283,34 @@ export default function ProductModal() {
 
                         {/* Bottom Sticky Action Bar */}
                         <div className="p-6 md:p-8 bg-white/80 backdrop-blur-xl border-t border-slate-100 mt-auto space-y-4">
+
+                            {/* Color/Tone Selector */}
+                            {hasColors && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tono seleccionado</p>
+                                        {selectedColor && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{selectedColor}</span>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedProduct.colors!.map((color) => (
+                                            <button
+                                                key={color}
+                                                onClick={() => setSelectedColor(color)}
+                                                title={color}
+                                                className={cn(
+                                                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
+                                                    selectedColor === color
+                                                        ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-105"
+                                                        : "bg-white text-slate-600 border-slate-200 hover:border-primary/40 hover:text-primary"
+                                                )}
+                                            >
+                                                {color}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex gap-4">
                                 <button
                                     onClick={handleAddToCart}

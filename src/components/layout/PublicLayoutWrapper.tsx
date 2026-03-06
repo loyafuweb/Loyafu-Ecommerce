@@ -24,7 +24,7 @@ export default function PublicLayoutWrapper({ children }: { children: React.Reac
     return (
         <div className="relative z-10 overflow-x-hidden">
             <Navbar />
-            <main className="min-h-screen pt-16 md:pt-4 pb-24 md:pb-20">
+            <main className="min-h-screen pt-16 md:pt-28 pb-24 md:pb-20">
                 {children}
             </main>
             <Footer />
