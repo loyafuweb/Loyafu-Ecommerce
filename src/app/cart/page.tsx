@@ -176,86 +176,95 @@ export default function Cart() {
 
                         {/* Cart Items */}
                         <div className="space-y-4">
-                            {items.map((item, index) => {
-                                const isWholesale = item.wholesalePrice && item.wholesaleMin && item.quantity >= item.wholesaleMin;
-                                const priceUSD = isWholesale ? item.wholesalePrice! : item.priceUSD;
-                                const itemPrice = currency === 'USD' ? priceUSD : priceUSD * exchangeRate;
-                                const itemTotal = itemPrice * item.quantity;
+                            {/* Pre-compute total quantity per product across all tones */}
+                            {(() => {
+                                const productTotalQty: Record<string, number> = {};
+                                items.forEach(i => {
+                                    productTotalQty[i.id] = (productTotalQty[i.id] || 0) + i.quantity;
+                                });
 
-                                return (
-                                    <div
-                                        key={`${item.id}-${item.selectedColor || 'none'}`}
-                                        className="group bg-white p-5 rounded-[1.5rem] flex flex-row items-center gap-6 border border-primary/5 hover:border-primary/20 transition-all duration-500 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(140,43,238,0.1)] hover:-translate-y-0.5"
-                                    >
+                                return items.map((item, index) => {
+                                    const totalQtyForProduct = productTotalQty[item.id] || item.quantity;
+                                    const isWholesale = !!(item.wholesalePrice && item.wholesaleMin && totalQtyForProduct >= item.wholesaleMin);
+                                    const priceUSD = isWholesale ? item.wholesalePrice! : item.priceUSD;
+                                    const itemPrice = currency === 'USD' ? priceUSD : priceUSD * exchangeRate;
+                                    const itemTotal = itemPrice * item.quantity;
+
+                                    return (
                                         <div
-                                            className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-slate-50 cursor-pointer"
-                                            onClick={() => openModal(item)}
+                                            key={`${item.id}-${item.selectedColor || 'none'}`}
+                                            className="group bg-white p-5 rounded-[1.5rem] flex flex-row items-center gap-6 border border-primary/5 hover:border-primary/20 transition-all duration-500 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(140,43,238,0.1)] hover:-translate-y-0.5"
                                         >
-                                            <Image src={item.image} fill className="object-cover" alt={item.name} />
-                                        </div>
+                                            <div
+                                                className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-slate-50 cursor-pointer"
+                                                onClick={() => openModal(item)}
+                                            >
+                                                <Image src={item.image} fill className="object-cover" alt={item.name} />
+                                            </div>
 
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-black text-base md:text-xl text-background-dark truncate font-brand italic tracking-tight">{item.name}</h3>
-                                            <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{item.category}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-black text-base md:text-xl text-background-dark truncate font-brand italic tracking-tight">{item.name}</h3>
+                                                <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{item.category}</p>
 
-                                            {/* Visual Progress Bar for Wholesale Incentive */}
-                                            {!isWholesale && item.wholesaleMin && (
-                                                <div className="mt-2 w-full max-w-[180px]">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <span className="text-[8px] font-black uppercase text-primary/60">Progreso Mayorista</span>
-                                                        <span className="text-[8px] font-black text-primary">{item.quantity}/{item.wholesaleMin}</span>
+                                                {/* Visual Progress Bar for Wholesale Incentive */}
+                                                {!isWholesale && item.wholesaleMin && (
+                                                    <div className="mt-2 w-full max-w-[180px]">
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="text-[8px] font-black uppercase text-primary/60">Progreso Mayorista</span>
+                                                            <span className="text-[8px] font-black text-primary">{item.quantity}/{item.wholesaleMin}</span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-primary/5">
+                                                            <div
+                                                                className="h-full bg-gradient-to-r from-primary/40 to-primary transition-all duration-1000 ease-out"
+                                                                style={{ width: `${(item.quantity / item.wholesaleMin) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-[7px] font-bold text-slate-400 mt-1">
+                                                            Faltan <span className="text-primary">{item.wholesaleMin - item.quantity}</span> para precio especial
+                                                        </p>
                                                     </div>
-                                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-primary/5">
-                                                        <div
-                                                            className="h-full bg-gradient-to-r from-primary/40 to-primary transition-all duration-1000 ease-out"
-                                                            style={{ width: `${(item.quantity / item.wholesaleMin) * 100}%` }}
-                                                        />
+                                                )}
+                                                {/* Color selector in cart */}
+                                                {item.colors && item.colors.length > 0 && (
+                                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                                        {item.colors.map(color => (
+                                                            <button
+                                                                key={color}
+                                                                onClick={(e) => { e.stopPropagation(); updateItemColor(item.id, item.selectedColor, color); }}
+                                                                className={cn(
+                                                                    "px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all",
+                                                                    item.selectedColor === color
+                                                                        ? "bg-primary text-white border-primary"
+                                                                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-primary/40"
+                                                                )}
+                                                            >
+                                                                {color}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                    <p className="text-[7px] font-bold text-slate-400 mt-1">
-                                                        Faltan <span className="text-primary">{item.wholesaleMin - item.quantity}</span> para precio especial
-                                                    </p>
+                                                )}
+                                                <div className="flex items-center gap-3 mt-3">
+                                                    <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-100">
+                                                        <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, -1, item.selectedColor); }} className="p-1"><Minus className="w-3 h-3" /></button>
+                                                        <span className="px-2 font-black text-xs">{item.quantity}</span>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, 1, item.selectedColor); }} className="p-1"><Plus className="w-3 h-3" /></button>
+                                                    </div>
+                                                    <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, item.selectedColor); }} className="text-slate-300 hover:text-red-500 transition-colors">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                            )}
-                                            {/* Color selector in cart */}
-                                            {item.colors && item.colors.length > 0 && (
-                                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                                    {item.colors.map(color => (
-                                                        <button
-                                                            key={color}
-                                                            onClick={(e) => { e.stopPropagation(); updateItemColor(item.id, item.selectedColor, color); }}
-                                                            className={cn(
-                                                                "px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all",
-                                                                item.selectedColor === color
-                                                                    ? "bg-primary text-white border-primary"
-                                                                    : "bg-slate-50 text-slate-500 border-slate-200 hover:border-primary/40"
-                                                            )}
-                                                        >
-                                                            {color}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-3 mt-3">
-                                                <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-100">
-                                                    <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, -1, item.selectedColor); }} className="p-1"><Minus className="w-3 h-3" /></button>
-                                                    <span className="px-2 font-black text-xs">{item.quantity}</span>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, 1, item.selectedColor); }} className="p-1"><Plus className="w-3 h-3" /></button>
-                                                </div>
-                                                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, item.selectedColor); }} className="text-slate-300 hover:text-red-500 transition-colors">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <p className="text-sm md:text-xl font-black text-background-dark leading-none">
+                                                    {currency === 'USD' ? `$${itemTotal.toFixed(2)}` : `${itemTotal.toFixed(2)} Bs`}
+                                                </p>
+                                                {isWholesale && <span className="text-[8px] bg-green-500 text-white px-2 py-0.5 rounded-full font-black uppercase inline-block mt-1">Mayorista</span>}
                                             </div>
                                         </div>
-
-                                        <div className="text-right">
-                                            <p className="text-sm md:text-xl font-black text-background-dark leading-none">
-                                                {currency === 'USD' ? `$${itemTotal.toFixed(2)}` : `${itemTotal.toFixed(2)} Bs`}
-                                            </p>
-                                            {isWholesale && <span className="text-[8px] bg-green-500 text-white px-2 py-0.5 rounded-full font-black uppercase inline-block mt-1">Mayorista</span>}
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            }
                         </div>
                     </div>
 
