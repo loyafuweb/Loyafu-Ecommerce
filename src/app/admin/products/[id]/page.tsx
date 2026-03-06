@@ -44,6 +44,7 @@ export default function EditProductPage() {
 
     const [colors, setColors] = useState<string[]>([]);
     const [newColor, setNewColor] = useState('');
+    const [requiresAllTones, setRequiresAllTones] = useState(false);
 
     useEffect(() => {
         if (productId) {
@@ -182,6 +183,7 @@ export default function EditProductPage() {
                     wholesale_price: formData.wholesale_price ? parseFloat(formData.wholesale_price) : null,
                     wholesale_min: formData.wholesale_min ? parseInt(formData.wholesale_min) : null,
                     colors: colors,
+                    requires_all_tones: requiresAllTones,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', productId);
@@ -431,6 +433,21 @@ export default function EditProductPage() {
                                         />
                                     </div>
                                 </div>
+
+                                {/* Checkbox requiring all tones for wholesale discount */}
+                                {colors.length > 1 && formData.wholesale_price && (
+                                    <div className="pt-2">
+                                        <label className="flex items-center gap-2 text-sm text-slate-300 font-medium cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={requiresAllTones}
+                                                onChange={(e) => setRequiresAllTones(e.target.checked)}
+                                                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
+                                            />
+                                            Exigir llevar UNO DE CADA TONO para aplicar descuento
+                                        </label>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

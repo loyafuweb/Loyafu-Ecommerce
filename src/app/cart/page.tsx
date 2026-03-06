@@ -185,7 +185,15 @@ export default function Cart() {
 
                                 return items.map((item, index) => {
                                     const totalQtyForProduct = productTotalQty[item.id] || item.quantity;
-                                    const isWholesale = !!(item.wholesalePrice && item.wholesaleMin && totalQtyForProduct >= item.wholesaleMin);
+
+                                    // Evaluate specific rule: requires one of each tone
+                                    let hasAllTones = true;
+                                    if (item.requiresAllTones && item.colors && item.colors.length > 0) {
+                                        const tonesInCart = items.filter(i => i.id === item.id).map(i => i.selectedColor).filter(Boolean);
+                                        hasAllTones = item.colors.every(color => tonesInCart.includes(color));
+                                    }
+
+                                    const isWholesale = !!(item.wholesalePrice && item.wholesaleMin && totalQtyForProduct >= item.wholesaleMin && hasAllTones);
                                     const priceUSD = isWholesale ? item.wholesalePrice! : item.priceUSD;
                                     const itemPrice = currency === 'USD' ? priceUSD : priceUSD * exchangeRate;
                                     const itemTotal = itemPrice * item.quantity;
@@ -211,16 +219,16 @@ export default function Cart() {
                                                     <div className="mt-2 w-full max-w-[180px]">
                                                         <div className="flex justify-between items-center mb-1">
                                                             <span className="text-[8px] font-black uppercase text-primary/60">Progreso Mayorista</span>
-                                                            <span className="text-[8px] font-black text-primary">{item.quantity}/{item.wholesaleMin}</span>
+                                                            <span className="text-[8px] font-black text-primary">{totalQtyForProduct}/{item.wholesaleMin}</span>
                                                         </div>
                                                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-primary/5">
                                                             <div
                                                                 className="h-full bg-gradient-to-r from-primary/40 to-primary transition-all duration-1000 ease-out"
-                                                                style={{ width: `${(item.quantity / item.wholesaleMin) * 100}%` }}
+                                                                style={{ width: `${(totalQtyForProduct / item.wholesaleMin) * 100}%` }}
                                                             />
                                                         </div>
                                                         <p className="text-[7px] font-bold text-slate-400 mt-1">
-                                                            Faltan <span className="text-primary">{item.wholesaleMin - item.quantity}</span> para precio especial
+                                                            Faltan <span className="text-primary">{item.wholesaleMin - totalQtyForProduct}</span> para precio especial
                                                         </p>
                                                     </div>
                                                 )}
@@ -263,8 +271,8 @@ export default function Cart() {
                                             </div>
                                         </div>
                                     );
-                                })
-                            }
+                                });
+                            })()}
                         </div>
                     </div>
 
@@ -384,14 +392,22 @@ export default function Cart() {
                                 <div className="pt-8 border-t border-white/10 flex justify-between items-end relative z-10">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Total Final</p>
-                                        <div className="text-5xl font-black tracking-tighter font-brand italic text-white">
-                                            {currency === 'USD' ? `$${totalUSD.toFixed(2)}` : `${totalBs.toFixed(2)} Bs`}
+                                        <div className="text-5xl font-black tracking-tighter font-brand italic text-white flex flex-col">
+                                            <span>${totalUSD.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     <div className="text-right pb-1 space-y-1">
                                         {hasDiscount && <span className="bg-green-500/20 text-green-400 text-[9px] font-black px-2 py-0.5 rounded-full block border border-green-500/30">25% OFF APLICADO</span>}
-                                        <span className="text-slate-500 font-bold text-xs tabular-nums block">{currency === 'USD' ? `${totalBs.toFixed(2)} Bs` : `$${totalUSD.toFixed(2)}`}</span>
-                                        <span className="text-slate-600 text-[9px] font-medium tabular-nums block">Tasa BCV: {exchangeRate.toFixed(2)} Bs/$</span>
+                                        {paymentMethod === 'pago_movil' && (
+                                            <>
+                                                <div className="text-sm font-black text-slate-300">
+                                                    {totalBs.toFixed(2)} Bs
+                                                </div>
+                                                <div className="text-[8px] font-bold text-slate-500 uppercase">
+                                                    Tasa BCV: {exchangeRate.toFixed(2)} Bs/$
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -453,6 +469,6 @@ export default function Cart() {
                 }}
                 initialData={deliveryDetails}
             />
-        </div>
+        </div >
     );
 }

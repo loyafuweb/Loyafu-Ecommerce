@@ -13,6 +13,7 @@ export interface Product {
     wholesaleMin?: number;
     badge?: 'nuevo' | 'promo' | 'agotado';
     colors?: string[]; // Available colors/tones
+    requiresAllTones?: boolean; // Requires one of each tone for wholesale
 }
 
 export interface CartItem extends Product {
