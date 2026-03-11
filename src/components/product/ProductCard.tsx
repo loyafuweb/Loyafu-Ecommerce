@@ -219,9 +219,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                     {product.name}
                 </h3>
                 <p className="text-[10px] md:text-sm text-primary/60 font-medium">{product.category}</p>
-                <p className="hidden md:block text-[10px] text-slate-500 mt-0.5 line-clamp-2 italic">
-                    {getProductDescription(product)}
-                </p>
                 {/* Price and Add to Cart Section */}
                 <div className="flex items-center justify-between mt-auto pt-2">
                     <div className="flex flex-col">

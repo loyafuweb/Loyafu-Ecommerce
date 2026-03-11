@@ -116,52 +116,56 @@ export default async function Home() {
       </section>
 
       {/* How to Buy Section */}
-      <section className="py-10 md:py-20 px-6 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-10 md:py-20 px-6 bg-purple-50 relative overflow-hidden">
+        {/* Ambient Gradients for pink background */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase font-brand italic text-background-dark leading-[0.85]">
               CÓMO COMPRAR <span className="text-primary block text-3xl md:text-5xl mt-2 not-italic tracking-tight">Maquillaje en Loyafu</span>
             </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
               Tu pedido listo en 3 simples pasos. Fácil, rápido y seguro.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative z-10">
             {/* Step 1 */}
-            <div className="bg-background-light p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-primary/10">
-              <div className="absolute -top-6 -left-6 w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg transform -rotate-6 group-hover:rotate-0 transition-transform">
+            <div className="bg-white p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-primary/5 hover:border-primary/20">
+              <div className="absolute -top-6 -left-6 w-16 h-16 bg-gradient-to-br from-primary-light to-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary/30 transform -rotate-6 group-hover:rotate-0 transition-transform">
                 1
               </div>
               <div className="mt-6 space-y-4">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary mb-6 shadow-sm">
+                <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center text-primary mb-6 border border-primary/10">
                   <ShoppingBag className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-background-dark">Llena tu Carrito</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <p className="text-slate-500 leading-relaxed text-sm">
                   Navega por nuestro catálogo y agrega tus productos favoritos. Si quieres precios al mayor, solo cumple con la cantidad mínima de cada producto.
                 </p>
               </div>
             </div>
 
             {/* Step 2 */}
-            <div className="bg-background-light p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-primary/10">
-              <div className="absolute -top-6 -left-6 w-16 h-16 bg-white border-2 border-primary text-primary rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg transform rotate-3 group-hover:rotate-0 transition-transform">
+            <div className="bg-white p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-primary/5 hover:border-primary/20">
+              <div className="absolute -top-6 -left-6 w-16 h-16 bg-white border-2 border-primary text-primary rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-primary/10 transform rotate-3 group-hover:rotate-0 transition-transform">
                 2
               </div>
               <div className="mt-6 space-y-4">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary mb-6 shadow-sm">
+                <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center text-primary mb-6 border border-primary/10">
                   <MessageCircle className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-background-dark">Envía tu Pedido</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <p className="text-slate-500 leading-relaxed text-sm">
                   Haz clic en "Completar Pedido". Esto abrirá WhatsApp con tu lista detallada. ¡No edites el mensaje para agilizar nuestro proceso!
                 </p>
               </div>
             </div>
 
             {/* Step 3 */}
-            <div className="bg-background-light p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-primary/10">
+            <div className="bg-primary/5 p-8 rounded-3xl relative group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-primary/10">
               <div className="absolute -top-6 -left-6 w-16 h-16 bg-gradient-to-br from-purple-600 to-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg transform -rotate-3 group-hover:rotate-0 transition-transform">
                 3
               </div>
@@ -170,7 +174,7 @@ export default async function Home() {
                   <Banknote className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-background-dark">Confirma y Paga</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <p className="text-slate-600 leading-relaxed text-sm">
                   Te confirmaremos disponibilidad y total a pagar. Realiza tu pago (Pago Móvil, Zelle o Efectivo), envía el comprobante y ¡listo!
                 </p>
               </div>

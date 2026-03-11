@@ -32,7 +32,8 @@ function CatalogContent() {
             // Fetch Products
             const { data: productsData, error: productsError } = await supabase
                 .from('products')
-                .select('*');
+                .select('*')
+                .or('is_hidden.is.null,is_hidden.eq.false');
 
             // Fetch Categories
             const { data: categoriesData, error: categoriesError } = await supabase
@@ -79,15 +80,19 @@ function CatalogContent() {
         setCurrentPage(1);
     };
 
+    const normalizeString = (str: string) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
 
         if (!query) return matchesCategory;
 
-        const searchLower = query.toLowerCase().trim();
-        const nameLower = p.name.toLowerCase();
-        const descLower = (p.description || '').toLowerCase();
-        const catLower = (p.category || '').toLowerCase();
+        const searchLower = normalizeString(query.trim());
+        const nameLower = normalizeString(p.name);
+        const descLower = normalizeString(p.description || '');
+        const catLower = normalizeString(p.category || '');
 
         // Fuzzy-ish matching: check name, description, and category
         const matchesSearch = nameLower.includes(searchLower) ||

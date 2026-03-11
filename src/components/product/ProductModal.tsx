@@ -84,15 +84,14 @@ export default function ProductModal() {
     const price = currency === 'USD' ? selectedProduct.priceUSD : selectedProduct.priceUSD * exchangeRate;
     const currencySymbol = currency === 'USD' ? '$' : 'Bs.';
 
-    const wholesalePriceStr = getWholesalePrice(selectedProduct);
+    const wholesalePriceUSD = selectedProduct.wholesalePrice;
+    const wholesaleMin = selectedProduct.wholesaleMin;
     let wholesalePriceDisplay = null;
 
-    if (wholesalePriceStr) {
-        const wholesaleUSD = parseFloat(wholesalePriceStr);
-        if (!isNaN(wholesaleUSD)) {
-            const wholesaleVal = currency === 'USD' ? wholesaleUSD : wholesaleUSD * exchangeRate;
-            wholesalePriceDisplay = `${currencySymbol}${wholesaleVal.toFixed(2)}`;
-        }
+    if (wholesalePriceUSD && wholesalePriceUSD > 0) {
+        const wholesaleVal = currency === 'USD' ? wholesalePriceUSD : wholesalePriceUSD * exchangeRate;
+        const minLabel = wholesaleMin ? ` (x${wholesaleMin} unid.)` : '';
+        wholesalePriceDisplay = `${currencySymbol}${wholesaleVal.toFixed(2)}${minLabel}`;
     }
 
     const hasColors = selectedProduct.colors && selectedProduct.colors.length > 0;
@@ -151,23 +150,21 @@ export default function ProductModal() {
                     <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
 
-                {/* Product Content Wrapper */}
-                <div className="flex flex-col md:flex-row h-full overflow-hidden">
-                    {/* Left Side: Product Media (Desktop Only) */}
-                    <div className="hidden md:block w-1/2 bg-slate-100 relative md:min-h-full">
-                        <Image
-                            src={selectedProduct.image}
-                            alt={selectedProduct.name}
-                            fill
-                            className="object-contain p-4"
-                            priority
-                        />
-                    </div>
+                {/* Left Side: Product Media (Desktop Only) */}
+                <div className="hidden md:flex w-1/2 bg-slate-100 relative">
+                    <Image
+                        src={selectedProduct.image}
+                        alt={selectedProduct.name}
+                        fill
+                        className="object-contain p-4"
+                        priority
+                    />
+                </div>
 
-                    {/* Right Side / Mobile Main Scroll Area */}
-                    <div className="w-full md:w-1/2 flex flex-col h-full overflow-hidden">
-                        {/* Content Scroll Area */}
-                        <div className="flex-1 overflow-y-auto pt-2 md:pt-0">
+                {/* Right Side / Mobile Main Scroll Area */}
+                <div className="w-full md:w-1/2 flex flex-col min-h-0">
+                    {/* Content Scroll Area */}
+                    <div className="flex-1 overflow-y-auto pt-2 md:pt-0 min-h-0">
 
                             {/* Product Media (Mobile Only - Horizontal Carousel) */}
                             <div className="md:hidden w-full bg-gray-50 relative aspect-[14/10] mb-4">
@@ -344,6 +341,5 @@ export default function ProductModal() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

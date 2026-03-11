@@ -17,6 +17,7 @@ export default function CombosSection() {
                 .from('products')
                 .select('*')
                 .eq('category', 'Combos')
+                .or('is_hidden.is.null,is_hidden.eq.false')
                 .order('created_at', { ascending: false });
 
             if (error) {

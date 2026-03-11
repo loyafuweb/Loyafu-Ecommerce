@@ -13,7 +13,9 @@ import {
     Package,
     Filter,
     ChevronRight,
-    ExternalLink
+    ExternalLink,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToastStore } from '@/components/ui/Toast';
@@ -69,6 +71,23 @@ function ProductsList() {
             setProducts(products.filter(p => p.id !== id));
         }
         setDeletingId(null);
+    };
+
+    const handleToggleHide = async (id: string, currentHiddenStatus: boolean) => {
+        const { error } = await supabase
+            .from('products')
+            .update({ is_hidden: !currentHiddenStatus })
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error toggling hide status:', error);
+            showToast('Error al actualizar el estado del producto.');
+        } else {
+            showToast(currentHiddenStatus ? 'Producto visible en el catálogo.' : 'Producto oculto del catálogo.');
+            setProducts(products.map(p => 
+                p.id === id ? { ...p, is_hidden: !currentHiddenStatus } : p
+            ));
+        }
     };
 
     const filteredProducts = products.filter(p => {
@@ -159,7 +178,14 @@ function ProductsList() {
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-white font-bold text-sm truncate group-hover:text-primary transition-colors">{product.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-white font-bold text-sm truncate group-hover:text-primary transition-colors">{product.name}</p>
+                                                        {product.is_hidden && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[9px] font-black uppercase tracking-widest border border-orange-500/20">
+                                                                Oculto
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[#6d667c] text-[10px] uppercase font-black tracking-tight truncate">{product.id}</p>
                                                 </div>
                                             </div>
@@ -177,6 +203,13 @@ function ProductsList() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleToggleHide(product.id, product.is_hidden)}
+                                                    className={`p-2 rounded-lg transition-all ${product.is_hidden ? 'text-orange-400 hover:bg-orange-500/10' : 'text-[#a8a3b5] hover:text-white hover:bg-white/5'}`}
+                                                    title={product.is_hidden ? "Mostrar en catálogo" : "Ocultar del catálogo"}
+                                                >
+                                                    {product.is_hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
                                                 <Link
                                                     href={`/admin/products/${product.id}`}
                                                     className="p-2 text-[#a8a3b5] hover:text-white hover:bg-white/5 rounded-lg transition-all"

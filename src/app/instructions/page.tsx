@@ -20,17 +20,17 @@ export default function Instructions() {
                     {
                         title: "1. Explora y Selecciona",
                         desc: "Navega por nuestro catálogo y añade tus productos favoritos a la bolsa. Si el producto tiene tonos (como polvos o bases), podrás elegir el que prefieras.",
-                        icon: <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">1</div>
+                        icon: <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg">1</div>
                     },
                     {
                         title: "2. Revisa tu Pedido",
                         desc: "Entra a tu Bolsa de Compras para confirmar las cantidades y tonos seleccionados. El sistema calculará automáticamente si calificas para precios al mayor.",
-                        icon: <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">2</div>
+                        icon: <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">2</div>
                     },
                     {
                         title: "3. Paga por WhatsApp",
                         desc: "Haz clic en 'Pagar por WhatsApp'. Se generará un mensaje automático con tu pedido detallado y el total en USD y Bs. Envíanoslo para concretar el pago y envío.",
-                        icon: <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center font-bold">3</div>
+                        icon: <div className="w-12 h-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center font-bold text-lg">3</div>
                     }
                 ].map((step, i) => (
                     <div key={i} className="flex gap-6 p-6 bg-white rounded-3xl border border-primary/10 shadow-sm hover:shadow-md transition-shadow">
@@ -80,14 +80,7 @@ export default function Instructions() {
             </div>
 
             <div className="pt-6">
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-4">
-                        <MapPin className="w-4 h-4" />
-                        Tienda Física
-                    </div>
-                    <h2 className="text-3xl font-black text-background-dark uppercase tracking-tight">Nuestra Ubicación</h2>
-                </div>
-                <LocationSection className="py-0 px-0" />
+                <LocationSection className="rounded-[2.5rem] shadow-2xl overflow-hidden py-12 md:py-16 px-6 md:px-12" />
             </div>
 
             <div className="text-center pt-8">

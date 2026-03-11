@@ -19,8 +19,18 @@ export default function Cart() {
     const [mounted, setMounted] = useState(false);
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'pago_movil' | 'binance' | 'divisa'>('pago_movil');
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     const isNationalShipping = deliveryMethod === 'national_shipping';
+    const NATIONAL_SHIPPING_MIN = 20;
+
+    // Auto-reset delivery methods if cart drops below minimum
+    useEffect(() => {
+        const total = getTotal();
+        if ((deliveryMethod === 'national_shipping' || deliveryMethod === 'local_delivery') && total < NATIONAL_SHIPPING_MIN) {
+            setDeliveryMethod('pickup');
+        }
+    }, [deliveryMethod, items]);
 
     // Divisa is not allowed for national shipping. If selected somehow, fallback to pago_movil in UI
     // Note: Hooks MUST be called before any early returns (like the !mounted check below)
@@ -37,6 +47,7 @@ export default function Cart() {
     if (!mounted) return null;
 
     const subtotalUSD = getTotal();
+    const canShipNationally = subtotalUSD >= NATIONAL_SHIPPING_MIN;
     const hasDiscount = paymentMethod === 'binance' || paymentMethod === 'divisa';
     const discountAmount = hasDiscount ? subtotalUSD * 0.25 : 0;
     const totalUSD = subtotalUSD - discountAmount;
@@ -176,132 +187,136 @@ export default function Cart() {
 
                         {/* Cart Items */}
                         <div className="space-y-4">
-                            {/* Pre-compute total quantity per product across all tones */}
                             {(() => {
-                                const productTotalQty: Record<string, number> = {};
-                                items.forEach(i => {
-                                    productTotalQty[i.id] = (productTotalQty[i.id] || 0) + i.quantity;
+                                const groupedItems: Record<string, {
+                                    baseItem: any;
+                                    totalQuantity: number;
+                                    variants: any[];
+                                    uniqueTones: Set<string>;
+                                }> = {};
+
+                                items.forEach(item => {
+                                    if (!groupedItems[item.id]) {
+                                        groupedItems[item.id] = {
+                                            baseItem: item,
+                                            totalQuantity: 0,
+                                            variants: [],
+                                            uniqueTones: new Set()
+                                        };
+                                    }
+                                    groupedItems[item.id].totalQuantity += item.quantity;
+                                    groupedItems[item.id].variants.push(item);
+                                    if (item.selectedColor) {
+                                        groupedItems[item.id].uniqueTones.add(item.selectedColor);
+                                    }
                                 });
 
-                                return items.map((item, index) => {
-                                    const totalQtyForProduct = productTotalQty[item.id] || item.quantity;
+                                return Object.values(groupedItems).map((grouped, index) => {
+                                    const { baseItem: item, totalQuantity: totalQtyForProduct, variants, uniqueTones: uniqueTonesInCart } = grouped;
 
                                     // Evaluate specific rule: requires a certain number of varied tones
                                     let meetsTonesVariety = true;
-                                    let uniqueTonesInCart = new Set<string>();
 
-                                    // Make sure it exists and uses it. If it doesn't exist, we fallback to true since it shouldn't hold back regular wholesale.
                                     if (item.requiredTonesCount !== undefined && Number(item.requiredTonesCount) > 0) {
-                                        // Look at ALL items in the cart to count unique tones for THIS product ID
-                                        const tonesForThisProduct = items
-                                            .filter(i => i.id === item.id)
-                                            .map(i => i.selectedColor)
-                                            .filter(Boolean) as string[];
-                                        uniqueTonesInCart = new Set(tonesForThisProduct);
                                         meetsTonesVariety = uniqueTonesInCart.size >= Number(item.requiredTonesCount);
                                     } else if (item.requiredTonesCount === undefined) {
-                                        // Fallback just in case old state from localStorage persists and this item HAD the old rule
                                         if ((item as any).requiresAllTones === true) {
-                                            meetsTonesVariety = false; // We can't know for sure the count, so enforce not to break prices temporarily before storage wipe.
+                                            meetsTonesVariety = false;
                                         }
                                     }
 
                                     const hasValidWholesalePrices = item.wholesalePrice !== undefined && item.wholesaleMin !== undefined;
                                     const isWholesale = hasValidWholesalePrices && (totalQtyForProduct >= item.wholesaleMin!) && meetsTonesVariety;
 
-                                    if (typeof window !== 'undefined') {
-                                        console.log(`Debug Cart Item ${item.name} (ID: ${item.id}, Color: ${item.selectedColor}):`, {
-                                            wholesaleMin: item.wholesaleMin,
-                                            totalQtyForProduct,
-                                            requiredTonesCount: item.requiredTonesCount,
-                                            requiredTonesParsed: Number(item.requiredTonesCount),
-                                            meetsTonesVariety,
-                                            uniqueTonesInCartSize: uniqueTonesInCart.size,
-                                            uniqueTonesInCart: Array.from(uniqueTonesInCart),
-                                            isWholesale
-                                        });
-                                    }
-
                                     const priceUSD = isWholesale ? item.wholesalePrice! : item.priceUSD;
                                     const itemPrice = currency === 'USD' ? priceUSD : priceUSD * exchangeRate;
-                                    const itemTotal = itemPrice * item.quantity;
+                                    const groupTotal = itemPrice * totalQtyForProduct;
 
                                     return (
                                         <div
-                                            key={`${item.id}-${item.selectedColor || 'none'}`}
-                                            className="group bg-white p-5 rounded-[1.5rem] flex flex-row items-center gap-6 border border-primary/5 hover:border-primary/20 transition-all duration-500 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(140,43,238,0.1)] hover:-translate-y-0.5"
+                                            key={item.id}
+                                            className="group bg-white p-5 md:p-6 rounded-[1.5rem] flex flex-col sm:flex-row items-start gap-6 border border-primary/5 hover:border-primary/20 transition-all duration-500 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(140,43,238,0.1)] hover:-translate-y-0.5"
                                         >
                                             <div
-                                                className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden bg-slate-50 cursor-pointer"
+                                                className="relative w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-slate-50 cursor-pointer flex-shrink-0"
                                                 onClick={() => openModal(item)}
                                             >
-                                                <Image src={item.image} fill className="object-cover" alt={item.name} />
+                                                <Image src={item.image} fill className="object-cover group-hover:scale-105 transition-transform duration-700" alt={item.name} />
                                             </div>
 
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-black text-base md:text-xl text-background-dark truncate font-brand italic tracking-tight">{item.name}</h3>
-                                                <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{item.category}</p>
+                                            <div className="flex-1 w-full min-w-0">
+                                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 w-full">
+                                                    <div>
+                                                        <h3 className="font-black text-xl md:text-2xl text-background-dark truncate font-brand italic tracking-tight leading-none mb-1">{item.name}</h3>
+                                                        <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{item.category}</p>
+                                                    </div>
+                                                    <div className="sm:text-right flex items-center sm:block gap-3">
+                                                        <p className="text-xl md:text-2xl font-black text-background-dark leading-none">
+                                                            {currency === 'USD' ? `$${groupTotal.toFixed(2)}` : `${groupTotal.toFixed(2)} Bs`}
+                                                        </p>
+                                                        {isWholesale && <span className="text-[8px] md:text-[9px] bg-green-500 text-white px-2.5 py-1 rounded-full font-black uppercase inline-block mt-0 sm:mt-2">Mayorista</span>}
+                                                    </div>
+                                                </div>
 
                                                 {/* Wholesale Progress Bar */}
                                                 {item.wholesaleMin && item.wholesaleMin > 1 && (
-                                                    <div className="mt-2 w-full max-w-[180px]">
-                                                        <div className="flex justify-between items-center mb-1">
-                                                            <span className="text-[8px] font-black uppercase text-primary/60">Progreso Mayorista</span>
-                                                            <span className="text-[8px] font-black text-primary">{totalQtyForProduct}/{item.wholesaleMin}</span>
+                                                    <div className="mt-3 w-full max-w-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                                        <div className="flex justify-between items-center mb-1.5">
+                                                            <span className="text-[9px] font-black uppercase text-primary/60 tracking-wider">Progreso Mayorista</span>
+                                                            <span className="text-[9px] font-black text-primary">{totalQtyForProduct}/{item.wholesaleMin}</span>
                                                         </div>
-                                                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-primary/5">
+                                                        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                             <div
-                                                                className="h-full bg-gradient-to-r from-primary/40 to-primary transition-all duration-1000 ease-out"
-                                                                style={{ width: `${(totalQtyForProduct / item.wholesaleMin) * 100}%` }}
+                                                                className="h-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-1000 ease-out"
+                                                                style={{ width: `${Math.min((totalQtyForProduct / item.wholesaleMin) * 100, 100)}%` }}
                                                             />
                                                         </div>
                                                         {!isWholesale && (
-                                                            <p className="text-[7px] font-bold text-slate-400 mt-1">
+                                                            <p className="text-[9px] font-bold text-slate-500 mt-2">
                                                                 {totalQtyForProduct < item.wholesaleMin ? (
-                                                                    <span>Faltan <span className="text-primary">{item.wholesaleMin - totalQtyForProduct}</span> para precio especial</span>
+                                                                    <span>Faltan <span className="text-primary">{item.wholesaleMin - totalQtyForProduct}</span> uds. para precio especial</span>
                                                                 ) : item.requiredTonesCount && item.requiredTonesCount > 0 && Array.from(uniqueTonesInCart).length < item.requiredTonesCount ? (
-                                                                    <span>Tiene que escoger <span className="text-primary">{item.requiredTonesCount}</span> variedad de tonos para precio especial (lleva {Array.from(uniqueTonesInCart).length})</span>
+                                                                    <span>Tiene que escoger <span className="text-primary">{item.requiredTonesCount}</span> variedad de tonos (lleva {Array.from(uniqueTonesInCart).length})</span>
                                                                 ) : null}
                                                             </p>
                                                         )}
                                                     </div>
                                                 )}
-                                                {/* Color selector in cart */}
-                                                {item.colors && item.colors.length > 0 && (
-                                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                                        {item.colors.map(color => (
-                                                            <button
-                                                                key={color}
-                                                                onClick={(e) => { e.stopPropagation(); updateItemColor(item.id, item.selectedColor, color); }}
-                                                                className={cn(
-                                                                    "px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all",
-                                                                    item.selectedColor === color
-                                                                        ? "bg-primary text-white border-primary"
-                                                                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-primary/40"
-                                                                )}
-                                                            >
-                                                                {color}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-3 mt-3">
-                                                    <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-100">
-                                                        <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, -1, item.selectedColor); }} className="p-1"><Minus className="w-3 h-3" /></button>
-                                                        <span className="px-2 font-black text-xs">{item.quantity}</span>
-                                                        <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.id, item.quantity, 1, item.selectedColor); }} className="p-1"><Plus className="w-3 h-3" /></button>
-                                                    </div>
-                                                    <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, item.selectedColor); }} className="text-slate-300 hover:text-red-500 transition-colors">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            <div className="text-right">
-                                                <p className="text-sm md:text-xl font-black text-background-dark leading-none">
-                                                    {currency === 'USD' ? `$${itemTotal.toFixed(2)}` : `${itemTotal.toFixed(2)} Bs`}
-                                                </p>
-                                                {isWholesale && <span className="text-[8px] bg-green-500 text-white px-2 py-0.5 rounded-full font-black uppercase inline-block mt-1">Mayorista</span>}
+                                                {/* Variants Breakdown */}
+                                                <div className="mt-4 grid gap-2">
+                                                    {variants.map(variant => (
+                                                        <div key={variant.selectedColor || 'base'} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-primary/10 shadow-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                                                <span className="text-xs font-black text-slate-600 uppercase tracking-tight">
+                                                                    {variant.selectedColor ? `Tono: ${variant.selectedColor}` : 'Único'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(variant.id, variant.quantity, -1, variant.selectedColor); }} className="p-1 hover:text-primary transition-colors"><Minus className="w-3 h-3" /></button>
+                                                                    <span className="px-3 font-black text-xs min-w-[20px] text-center text-background-dark">{variant.quantity}</span>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(variant.id, variant.quantity, 1, variant.selectedColor); }} className="p-1 hover:text-primary transition-colors"><Plus className="w-3 h-3" /></button>
+                                                                </div>
+                                                                <button onClick={(e) => { e.stopPropagation(); removeItem(variant.id, variant.selectedColor); }} className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all" title="Eliminar tono">
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Add another tone explicit button */}
+                                                {item.colors && item.colors.length > 0 && (
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); openModal(item); }}
+                                                        className="mt-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-primary bg-primary/5 hover:bg-primary/10 transition-colors inline-flex items-center gap-2 border border-primary/10"
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5" />
+                                                        Añadir otro tono
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     );
@@ -361,29 +376,39 @@ export default function Cart() {
                                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Método de Entrega</p>
                                     <div className="grid grid-cols-3 gap-1.5">
                                         {[
-                                            { id: 'pickup', label: 'Tienda', icon: Store },
-                                            { id: 'local_delivery', label: 'Delivery', icon: Truck },
-                                            { id: 'national_shipping', label: 'Envío Nacional', icon: PackageCheck }
+                                            { id: 'pickup', label: 'Tienda', icon: Store, disabled: false },
+                                            { id: 'local_delivery', label: 'Delivery', icon: Truck, disabled: !canShipNationally },
+                                            { id: 'national_shipping', label: 'Envío Nacional', icon: PackageCheck, disabled: !canShipNationally }
                                         ].map(m => {
                                             const Icon = m.icon;
                                             const active = deliveryMethod === m.id;
+                                            const isDisabled = m.disabled;
                                             return (
                                                 <button
                                                     key={m.id}
-                                                    onClick={() => setDeliveryMethod(m.id as any)}
+                                                    onClick={() => !isDisabled && setDeliveryMethod(m.id as any)}
+                                                    disabled={isDisabled}
+                                                    title={isDisabled ? `Mínimo $${NATIONAL_SHIPPING_MIN} para envío nacional` : undefined}
                                                     className={cn(
                                                         "flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl text-[8px] font-black uppercase tracking-tight transition-all duration-300 border",
-                                                        active
-                                                            ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_-5px_rgba(140,43,238,0.5)]"
-                                                            : "bg-white/5 text-slate-500 border-white/5 hover:bg-white/10 hover:text-slate-300"
+                                                        isDisabled
+                                                            ? "opacity-40 cursor-not-allowed bg-white/5 text-slate-600 border-white/5"
+                                                            : active
+                                                                ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_-5px_rgba(140,43,238,0.5)]"
+                                                                : "bg-white/5 text-slate-500 border-white/5 hover:bg-white/10 hover:text-slate-300"
                                                     )}
                                                 >
-                                                    <Icon className={cn("w-4 h-4", active ? "text-primary" : "text-slate-500")} />
+                                                    <Icon className={cn("w-4 h-4", isDisabled ? "text-slate-600" : active ? "text-primary" : "text-slate-500")} />
                                                     {m.label}
                                                 </button>
                                             );
                                         })}
                                     </div>
+                                    {!canShipNationally && (
+                                        <p className="text-[8px] text-amber-400/80 font-bold flex items-center gap-1">
+                                            <span>⚠</span> Mínimo ${NATIONAL_SHIPPING_MIN} para Envío Nacional
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Payment Selector */}
@@ -394,23 +419,28 @@ export default function Cart() {
                                     </div>
                                     <div className="grid grid-cols-3 gap-1.5">
                                         {[
-                                            { id: 'pago_movil', label: 'Pago Móvil', icon: Smartphone, discount: false },
-                                            { id: 'divisa', label: 'Efectivo', icon: Banknote, discount: true },
-                                            { id: 'binance', label: 'Binance', icon: Bitcoin, discount: true }
+                                            { id: 'pago_movil', label: 'Pago Móvil', icon: Smartphone, discount: false, disabledWhen: false },
+                                            { id: 'divisa', label: 'Efectivo', icon: Banknote, discount: true, disabledWhen: isNationalShipping },
+                                            { id: 'binance', label: 'Binance', icon: Bitcoin, discount: true, disabledWhen: false }
                                         ].map(p => {
                                             const Icon = p.icon;
                                             const active = paymentMethod === p.id;
+                                            const isPayDisabled = p.disabledWhen;
                                             return (
                                                 <button
                                                     key={p.id}
-                                                    onClick={() => setPaymentMethod(p.id as any)}
+                                                    onClick={() => !isPayDisabled && setPaymentMethod(p.id as any)}
+                                                    disabled={isPayDisabled}
+                                                    title={isPayDisabled ? 'No disponible para Envío Nacional' : undefined}
                                                     className={cn(
                                                         "relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl text-[8px] font-black uppercase tracking-tight transition-all duration-300 border overflow-hidden",
-                                                        active && p.discount
-                                                            ? "bg-green-500/20 text-green-400 border-green-500/40 shadow-[0_0_20px_-5px_rgba(34,197,94,0.5)]"
-                                                            : active
-                                                                ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_-5px_rgba(140,43,238,0.5)]"
-                                                                : "bg-white/5 text-slate-500 border-white/5 hover:bg-white/10 hover:text-slate-300"
+                                                        isPayDisabled
+                                                            ? "opacity-40 cursor-not-allowed bg-white/5 text-slate-600 border-white/5"
+                                                            : active && p.discount
+                                                                ? "bg-green-500/20 text-green-400 border-green-500/40 shadow-[0_0_20px_-5px_rgba(34,197,94,0.5)]"
+                                                                : active
+                                                                    ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_-5px_rgba(140,43,238,0.5)]"
+                                                                    : "bg-white/5 text-slate-500 border-white/5 hover:bg-white/10 hover:text-slate-300"
                                                     )}
                                                 >
                                                     {p.discount && <span className="absolute top-1 right-1 text-[7px] font-black text-green-400 leading-none">-25%</span>}
@@ -468,11 +498,41 @@ export default function Cart() {
                                 </div>
                             </div>
 
+                            {/* Terms Checkbox */}
+                            <div className="flex items-start gap-3 mt-4 mb-6 relative z-10">
+                                <label className="relative flex cursor-pointer items-start gap-4">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        id="terms"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    />
+                                    <div className="h-5 w-5 flex-shrink-0 rounded border border-white/20 bg-white/5 transition-all peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center">
+                                        <svg className={cn("h-3 w-3 text-white transition-opacity", termsAccepted ? "opacity-100" : "opacity-0")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-[11px] md:text-sm text-slate-400 font-medium leading-relaxed select-none">
+                                        He leído y acepto las{' '}
+                                        <Link href="/policies" className="text-primary-light hover:text-white transition-colors hover:underline font-bold" target="_blank" onClick={(e) => e.stopPropagation()}>
+                                            políticas de compra, cambios y devoluciones
+                                        </Link>
+                                        {' '}de Loyafu.
+                                    </div>
+                                </label>
+                            </div>
+
                             <button
                                 onClick={handleCheckout}
+                                disabled={!termsAccepted}
                                 className={cn(
-                                    "w-full py-5 rounded-3xl font-black text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3",
-                                    deliveryMethod === 'pickup' ? "bg-[#25D366] text-white" : "bg-primary text-white"
+                                    "w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all flex items-center justify-center gap-3",
+                                    !termsAccepted
+                                        ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5 opacity-80"
+                                        : deliveryMethod === 'pickup'
+                                            ? "bg-[#25D366] text-white hover:scale-[1.02] active:scale-[0.98] hover:shadow-green-500/20 shadow-lg"
+                                            : "bg-primary text-white hover:scale-[1.02] active:scale-[0.98] hover:shadow-primary/30 shadow-lg border-b-4 border-primary-dark/30"
                                 )}
                             >
                                 {deliveryMethod === 'pickup' ? (

@@ -18,7 +18,7 @@ export default function Footer() {
 
     return (
         <footer className={cn(
-            "bg-white border-t border-primary/5 py-16 md:py-24 relative overflow-hidden",
+            "bg-purple-50 border-t border-primary/5 py-16 md:py-24 relative overflow-hidden",
             shouldHideOnMobile && "hidden md:block" // Hidden on mobile, shown on desktop for specific routes
         )}>
             {/* Background Glow */}
@@ -138,8 +138,8 @@ export default function Footer() {
                                 PAGO MÓVIL
                             </div>
                             <div className="px-3 py-1 bg-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
-                                <span className="text-xs font-black">Z</span>
-                                ZELLE
+                                <span className="text-xs font-black">₿</span>
+                                BINANCE
                             </div>
                         </div>
                     </div>
