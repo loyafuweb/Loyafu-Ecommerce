@@ -57,7 +57,8 @@ function CatalogContent() {
                 wholesaleMin: p.wholesale_min,
                 badge: p.badge, // Ensure badge is also passed if it exists
                 requiredTonesCount: p.required_tones_count,
-                tonesImage: p.tones_image_url
+                tonesImage: p.tones_image_url,
+                wholesaleCombinations: p.wholesale_combinations
             }));
 
             setProducts(mappedProducts);

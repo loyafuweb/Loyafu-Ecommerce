@@ -35,7 +35,7 @@ const MOCK_FEED: InstagramMedia[] = [
     {
         id: 'mock-1',
         media_type: 'IMAGE',
-        media_url: 'https://images.unsplash.com/photo-1552693673-1bf958298935?auto=format&fit=crop&q=80&w=1000',
+        media_url: 'https://placehold.co/400x400/f8f7fa/9d33f7.png?text=Post+1',
         permalink: 'https://instagram.com',
         caption: 'Glow up with our new collection! ✨ #loyafu #skincare #Nuevo',
         timestamp: new Date().toISOString()
@@ -43,8 +43,8 @@ const MOCK_FEED: InstagramMedia[] = [
     {
         id: 'mock-2',
         media_type: 'VIDEO',
-        media_url: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&q=80&w=1000',
-        thumbnail_url: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&q=80&w=1000',
+        media_url: 'https://placehold.co/400x400/f8f7fa/9d33f7.png?text=Video+2',
+        thumbnail_url: 'https://placehold.co/400x400/f8f7fa/9d33f7.png?text=Thumb+2',
         permalink: 'https://instagram.com',
         caption: 'Self care sunday vibes 🧖‍♀️ #Relax #SkinTip',
         timestamp: new Date(Date.now() - 86400000).toISOString()
@@ -52,7 +52,7 @@ const MOCK_FEED: InstagramMedia[] = [
     {
         id: 'mock-3',
         media_type: 'CAROUSEL_ALBUM',
-        media_url: 'https://images.unsplash.com/photo-1596462502278-27bfdd403348?auto=format&fit=crop&q=80&w=1000',
+        media_url: 'https://placehold.co/400x400/f8f7fa/9d33f7.png?text=Carousel+3',
         permalink: 'https://instagram.com',
         caption: 'Texture tuesday 💧 #Glow #Promo',
         timestamp: new Date(Date.now() - 172800000).toISOString()
@@ -60,7 +60,7 @@ const MOCK_FEED: InstagramMedia[] = [
     {
         id: 'mock-4',
         media_type: 'IMAGE',
-        media_url: 'https://images.unsplash.com/photo-1515688594390-b649af70d282?auto=format&fit=crop&q=80&w=1000',
+        media_url: 'https://placehold.co/400x400/f8f7fa/9d33f7.png?text=Post+4',
         permalink: 'https://instagram.com',
         caption: 'Join the community! Link in bio.',
         timestamp: new Date(Date.now() - 604800000).toISOString()
@@ -77,7 +77,13 @@ export default function InstagramFeed() {
         const fetchInstagramFeed = async () => {
             try {
                 const res = await fetch('/api/instagram/feed');
-                if (!res.ok) throw new Error('Failed to fetch from internal API');
+                if (!res.ok) {
+                    console.warn('Instagram API unavailable, using mock data.');
+                    setUser(MOCK_USER);
+                    setPosts(MOCK_FEED);
+                    setLoading(false);
+                    return;
+                }
 
                 const data = await res.json();
                 console.log("Instagram Client Data:", data);

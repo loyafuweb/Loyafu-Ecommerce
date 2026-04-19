@@ -28,7 +28,8 @@ export default function ProductModal() {
     const [dragY, setDragY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
+    const [selectedColors, setSelectedColors] = useState<string[]>([]);
+    const [selectedCombination, setSelectedCombination] = useState<{name: string, units: number} | null>(null);
 
     useEffect(() => {
         if (selectedProduct) {
@@ -36,7 +37,8 @@ export default function ProductModal() {
             setAddedToCart(false);
             setDragY(0);
             // Auto-select first color if product has colors
-            setSelectedColor(selectedProduct.colors && selectedProduct.colors.length > 0 ? selectedProduct.colors[0] : undefined);
+            setSelectedColors(selectedProduct.colors && selectedProduct.colors.length > 0 ? [selectedProduct.colors[0]] : []);
+            setSelectedCombination(null);
         }
     }, [selectedProduct, isFavoriteStore, isOpen]);
 
@@ -102,9 +104,18 @@ export default function ProductModal() {
     }
 
     const hasColors = selectedProduct.colors && selectedProduct.colors.length > 0;
+    const hasCombinations = selectedProduct.wholesaleCombinations && selectedProduct.wholesaleCombinations.length > 0;
 
     const handleAddToCart = () => {
-        addToCart(selectedProduct, selectedColor);
+        if (selectedCombination) {
+            addToCart(selectedProduct, selectedCombination.name, selectedCombination.units);
+        } else if (selectedColors.length > 0) {
+            selectedColors.forEach(color => {
+                addToCart(selectedProduct, color);
+            });
+        } else {
+            addToCart(selectedProduct, undefined);
+        }
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
     };
@@ -342,27 +353,66 @@ export default function ProductModal() {
                         {/* Bottom Sticky Action Bar */}
                         <div className="p-6 md:p-8 bg-white/80 backdrop-blur-xl border-t border-slate-100 mt-auto space-y-4">
 
-                            {/* Color/Tone Selector */}
+                            {/* Color/Tone Selector (Retail) */}
                             {hasColors && (
-                                <div className="space-y-2">
+                                <div className={cn("space-y-2 transition-opacity", selectedCombination ? "opacity-30" : "opacity-100")}>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tono seleccionado</p>
-                                        {selectedColor && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{selectedColor}</span>}
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tonos individuales (Detal)</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedProduct.colors!.map((color) => (
                                             <button
                                                 key={color}
-                                                onClick={() => setSelectedColor(color)}
+                                                onClick={() => {
+                                                    setSelectedCombination(null);
+                                                    if (selectedColors.includes(color)) {
+                                                        setSelectedColors(selectedColors.filter(c => c !== color));
+                                                    } else {
+                                                        setSelectedColors([...selectedColors, color]);
+                                                    }
+                                                }}
                                                 title={color}
                                                 className={cn(
                                                     "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
-                                                    selectedColor === color
+                                                    selectedColors.includes(color)
                                                         ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-105"
                                                         : "bg-white text-slate-600 border-slate-200 hover:border-primary/40 hover:text-primary"
                                                 )}
                                             >
                                                 {color}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Wholesale Combinations */}
+                            {hasCombinations && (
+                                <div className="space-y-2 mt-4">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
+                                            <Sparkles className="w-3 h-3" /> Combinaciones (Solo Mayor)
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        {selectedProduct.wholesaleCombinations!.map((combo) => (
+                                            <button
+                                                key={combo.name}
+                                                onClick={() => {
+                                                    setSelectedColors([]);
+                                                    setSelectedCombination(combo);
+                                                }}
+                                                className={cn(
+                                                    "w-full px-4 py-3 rounded-2xl text-left border-2 flex items-center justify-between transition-all",
+                                                    selectedCombination?.name === combo.name
+                                                        ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
+                                                        : "bg-white text-slate-700 border-slate-200 hover:border-primary/40 hover:bg-primary/5"
+                                                )}
+                                            >
+                                                <div className="flex justify-between items-center w-full">
+                                                    <span className="text-sm font-bold uppercase tracking-wider">{combo.name}</span>
+                                                    <span className="text-xs font-bold bg-black/10 px-2 py-0.5 rounded-md px-2 opacity-90">{combo.units} piezas incl.</span>
+                                                </div>
                                             </button>
                                         ))}
                                     </div>
@@ -388,7 +438,7 @@ export default function ProductModal() {
                                     ) : (
                                         <>
                                             <ShoppingBag className="w-5 h-5" />
-                                            Agregar
+                                            {selectedColors.length > 1 ? `Agregar ${selectedColors.length} Tonos` : "Agregar"}
                                         </>
                                     )}
                                 </button>

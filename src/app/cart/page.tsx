@@ -215,21 +215,37 @@ export default function Cart() {
                                     const { baseItem: item, totalQuantity: totalQtyForProduct, variants, uniqueTones: uniqueTonesInCart } = grouped;
 
                                     // Evaluate specific rule: requires a certain number of varied tones
-                                    let meetsTonesVariety = false;
+                                    let meetsTonesVarietyGroup = true;
 
                                     if (item.requiredTonesCount !== undefined && Number(item.requiredTonesCount) > 0) {
-                                        meetsTonesVariety = uniqueTonesInCart.size >= Number(item.requiredTonesCount);
+                                        meetsTonesVarietyGroup = uniqueTonesInCart.size >= Number(item.requiredTonesCount);
                                     } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
-                                        meetsTonesVariety = uniqueTonesInCart.size >= (item.colors?.length || 1);
+                                        meetsTonesVarietyGroup = uniqueTonesInCart.size >= (item.colors?.length || 1);
                                     }
 
-                                    const meetsMinQty = item.wholesaleMin !== undefined && totalQtyForProduct >= item.wholesaleMin;
+                                    const meetsMinQtyGroup = item.wholesaleMin !== undefined && totalQtyForProduct >= item.wholesaleMin;
                                     const hasValidWholesalePrices = item.wholesalePrice !== undefined;
-                                    const isWholesale = hasValidWholesalePrices && (meetsMinQty || meetsTonesVariety);
+                                    const isWholesaleComboGroup = variants.some(v => v.wholesaleCombinations?.some((c: any) => c.name === v.selectedColor));
+                                    const isWholesale = isWholesaleComboGroup || (hasValidWholesalePrices && meetsMinQtyGroup && meetsTonesVarietyGroup);
 
-                                    const priceUSD = isWholesale ? item.wholesalePrice! : item.priceUSD;
-                                    const itemPrice = currency === 'USD' ? priceUSD : priceUSD * exchangeRate;
-                                    const groupTotal = itemPrice * totalQtyForProduct;
+                                    // Calculate precise group total
+                                    const groupTotal = variants.reduce((sum, variant) => {
+                                        const isWholesaleCombo = !!item.wholesaleCombinations?.some((c: any) => c.name === variant.selectedColor);
+                                        
+                                        let meetsTonesVariety = true;
+                                        if (!isWholesaleCombo) {
+                                            if (item.requiredTonesCount !== undefined && Number(item.requiredTonesCount) > 0) {
+                                                meetsTonesVariety = uniqueTonesInCart.size >= Number(item.requiredTonesCount);
+                                            } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
+                                                meetsTonesVariety = uniqueTonesInCart.size >= (item.colors?.length || 1);
+                                            }
+                                        }
+
+                                        const meetsMinQty = item.wholesaleMin !== undefined && totalQtyForProduct >= item.wholesaleMin;
+                                        const variantIsWholesale = isWholesaleCombo || !!(item.wholesalePrice && meetsMinQty && meetsTonesVariety);
+                                        const variantPriceUSD = (variantIsWholesale && item.wholesalePrice) ? item.wholesalePrice! : item.priceUSD;
+                                        return sum + ((currency === 'USD' ? variantPriceUSD : variantPriceUSD * exchangeRate) * variant.quantity);
+                                    }, 0);
 
                                     return (
                                         <div

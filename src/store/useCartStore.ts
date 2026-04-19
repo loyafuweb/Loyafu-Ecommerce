@@ -15,6 +15,7 @@ export interface Product {
     colors?: string[]; // Available colors/tones
     requiredTonesCount?: number; // Requires a specific count of different tones for wholesale
     tonesImage?: string; // Optional image specifically for showing the tones/swatches
+    wholesaleCombinations?: { name: string, units: number }[]; // Wholesale combinations like Combo A/B
 }
 
 export interface CartItem extends Product {
@@ -46,7 +47,7 @@ interface CartState {
     deliveryDetails: DeliveryDetails | null;
     setDeliveryMethod: (method: DeliveryMethod) => void;
     setDeliveryDetails: (details: DeliveryDetails | null) => void;
-    addItem: (product: Product, color?: string) => void;
+    addItem: (product: Product, color?: string, quantity?: number) => void;
     removeItem: (productId: string, color?: string) => void;
     updateQuantity: (productId: string, quantity: number, color?: string) => void;
     updateItemColor: (productId: string, oldColor: string | undefined, newColor: string) => void;
@@ -67,7 +68,7 @@ export const useCartStore = create<CartState>()(
             deliveryDetails: null,
             setDeliveryMethod: (method) => set({ deliveryMethod: method }),
             setDeliveryDetails: (details) => set({ deliveryDetails: details }),
-            addItem: (product, color) =>
+            addItem: (product, color, quantity = 1) =>
                 set((state) => {
                     // Find item with same ID AND same color
                     const existingItem = state.items.find(
@@ -78,14 +79,14 @@ export const useCartStore = create<CartState>()(
                         return {
                             items: state.items.map((item) =>
                                 item.id === product.id && item.selectedColor === color
-                                    ? { ...item, quantity: item.quantity + 1 }
+                                    ? { ...item, quantity: item.quantity + quantity }
                                     : item
                             ),
                         };
                     }
 
                     return {
-                        items: [...state.items, { ...product, quantity: 1, selectedColor: color }]
+                        items: [...state.items, { ...product, quantity, selectedColor: color }]
                     };
                 }),
             removeItem: (productId, color) =>
@@ -144,23 +145,27 @@ export const useCartStore = create<CartState>()(
                 const totalUSD = state.items.reduce((sum, item) => {
                     const totalQtyForProduct = state.items.reduce((qSum, i) => i.id === item.id ? qSum + i.quantity : qSum, 0);
 
-                    let meetsTonesVariety = false;
-                    if (item.requiredTonesCount !== undefined && item.requiredTonesCount > 0) {
-                        const tonesForThisProduct = state.items
-                            .filter(i => i.id === item.id)
-                            .map(i => i.selectedColor)
-                            .filter(Boolean) as string[];
-                        const uniqueTones = new Set(tonesForThisProduct);
-                        meetsTonesVariety = uniqueTones.size >= item.requiredTonesCount;
-                    } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
-                        const tonesForThisProduct = state.items.filter(i => i.id === item.id).map(i => i.selectedColor).filter(Boolean) as string[];
-                        meetsTonesVariety = new Set(tonesForThisProduct).size >= (item.colors?.length || 1);
+                    const isWholesaleCombo = !!item.wholesaleCombinations?.some(c => c.name === item.selectedColor);
+                    
+                    let meetsTonesVariety = true;
+                    if (!isWholesaleCombo) {
+                        if (item.requiredTonesCount !== undefined && item.requiredTonesCount > 0) {
+                            const tonesForThisProduct = state.items
+                                .filter(i => i.id === item.id)
+                                .map(i => i.selectedColor)
+                                .filter(Boolean) as string[];
+                            const uniqueTones = new Set(tonesForThisProduct);
+                            meetsTonesVariety = uniqueTones.size >= item.requiredTonesCount;
+                        } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
+                            const tonesForThisProduct = state.items.filter(i => i.id === item.id).map(i => i.selectedColor).filter(Boolean) as string[];
+                            meetsTonesVariety = new Set(tonesForThisProduct).size >= (item.colors?.length || 1);
+                        }
                     }
 
                     const meetsMinQty = !!(item.wholesaleMin && totalQtyForProduct >= item.wholesaleMin);
 
-                    const isWholesale = !!(item.wholesalePrice && (meetsMinQty || meetsTonesVariety));
-                    const price = isWholesale ? item.wholesalePrice! : item.priceUSD;
+                    const isWholesale = isWholesaleCombo || !!(item.wholesalePrice && meetsMinQty && meetsTonesVariety);
+                    const price = (isWholesale && item.wholesalePrice) ? item.wholesalePrice : item.priceUSD;
 
                     return sum + price * item.quantity;
                 }, 0);
@@ -174,23 +179,27 @@ export const useCartStore = create<CartState>()(
                 return state.items.reduce((sum, item) => {
                     const totalQtyForProduct = state.items.reduce((qSum, i) => i.id === item.id ? qSum + i.quantity : qSum, 0);
 
-                    let meetsTonesVariety = false;
-                    if (item.requiredTonesCount !== undefined && item.requiredTonesCount > 0) {
-                        const tonesForThisProduct = state.items
-                            .filter(i => i.id === item.id)
-                            .map(i => i.selectedColor)
-                            .filter(Boolean) as string[];
-                        const uniqueTones = new Set(tonesForThisProduct);
-                        meetsTonesVariety = uniqueTones.size >= item.requiredTonesCount;
-                    } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
-                        const tonesForThisProduct = state.items.filter(i => i.id === item.id).map(i => i.selectedColor).filter(Boolean) as string[];
-                        meetsTonesVariety = new Set(tonesForThisProduct).size >= (item.colors?.length || 1);
+                    const isWholesaleCombo = !!item.wholesaleCombinations?.some(c => c.name === item.selectedColor);
+                    
+                    let meetsTonesVariety = true;
+                    if (!isWholesaleCombo) {
+                        if (item.requiredTonesCount !== undefined && item.requiredTonesCount > 0) {
+                            const tonesForThisProduct = state.items
+                                .filter(i => i.id === item.id)
+                                .map(i => i.selectedColor)
+                                .filter(Boolean) as string[];
+                            const uniqueTones = new Set(tonesForThisProduct);
+                            meetsTonesVariety = uniqueTones.size >= item.requiredTonesCount;
+                        } else if (item.requiredTonesCount === undefined && (item as any).requiresAllTones === true) {
+                            const tonesForThisProduct = state.items.filter(i => i.id === item.id).map(i => i.selectedColor).filter(Boolean) as string[];
+                            meetsTonesVariety = new Set(tonesForThisProduct).size >= (item.colors?.length || 1);
+                        }
                     }
 
                     const meetsMinQty = !!(item.wholesaleMin && totalQtyForProduct >= item.wholesaleMin);
 
-                    const isWholesale = !!(item.wholesalePrice && (meetsMinQty || meetsTonesVariety));
-                    const price = isWholesale ? item.wholesalePrice! : item.priceUSD;
+                    const isWholesale = isWholesaleCombo || !!(item.wholesalePrice && meetsMinQty && meetsTonesVariety);
+                    const price = (isWholesale && item.wholesalePrice) ? item.wholesalePrice : item.priceUSD;
 
                     return sum + price * item.quantity;
                 }, 0);

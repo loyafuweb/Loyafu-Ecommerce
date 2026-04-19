@@ -45,6 +45,10 @@ export default function NewProductPage() {
     const [newColor, setNewColor] = useState('');
     const [requiredTonesCount, setRequiredTonesCount] = useState<number>(0);
 
+    const [wholesaleCombinations, setWholesaleCombinations] = useState<{name: string, units: number}[]>([]);
+    const [newComboName, setNewComboName] = useState('');
+    const [newComboUnits, setNewComboUnits] = useState('3');
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -75,6 +79,18 @@ export default function NewProductPage() {
 
     const removeColor = (color: string) => {
         setColors(colors.filter(c => c !== color));
+    };
+
+    const handleAddCombo = () => {
+        if (newComboName.trim() && parseInt(newComboUnits) > 0) {
+            setWholesaleCombinations([...wholesaleCombinations, { name: newComboName.trim(), units: parseInt(newComboUnits) }]);
+            setNewComboName('');
+            setNewComboUnits('3');
+        }
+    };
+
+    const removeCombo = (name: string) => {
+        setWholesaleCombinations(wholesaleCombinations.filter(c => c.name !== name));
     };
 
     const compressImage = (file: File): Promise<Blob> => {
@@ -181,6 +197,7 @@ export default function NewProductPage() {
                     wholesale_min: formData.wholesale_min ? parseInt(formData.wholesale_min) : null,
                     colors: colors,
                     required_tones_count: requiredTonesCount,
+                    wholesale_combinations: wholesaleCombinations,
                     updated_at: new Date().toISOString()
                 });
 
@@ -442,6 +459,46 @@ export default function NewProductPage() {
                                             placeholder="Ej: 3"
                                             className="w-full bg-[#251e30] border border-white/5 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-primary transition-all text-sm font-bold"
                                         />
+                                    </div>
+                                </div>
+                                <div className="pt-4 mt-4 border-t border-white/5 space-y-3">
+                                    <label className="text-[10px] font-black text-[#6d667c] uppercase tracking-widest pl-1">Combinaciones prefabricadas (Para ventas al mayor)</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newComboName}
+                                            onChange={(e) => setNewComboName(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCombo())}
+                                            placeholder="Nombre (ej. Combinación A)"
+                                            className="flex-1 bg-[#251e30] border border-white/5 text-white px-4 py-2 rounded-xl focus:outline-none focus:border-primary transition-all text-xs"
+                                        />
+                                        <input
+                                            type="number"
+                                            value={newComboUnits}
+                                            onChange={(e) => setNewComboUnits(e.target.value)}
+                                            placeholder="Unidades"
+                                            className="w-20 bg-[#251e30] border border-white/5 text-white px-2 py-2 rounded-xl focus:outline-none focus:border-primary transition-all text-xs text-center"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddCombo}
+                                            className="bg-white/5 hover:bg-white/10 text-white p-2 rounded-xl transition-all shrink-0"
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 pt-2">
+                                        {wholesaleCombinations.map(combo => (
+                                            <span
+                                                key={combo.name}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-white text-[10px] font-black uppercase rounded-lg border border-primary/30"
+                                            >
+                                                {combo.name} ({combo.units} Unid.)
+                                                <button type="button" onClick={() => removeCombo(combo.name)} className="hover:text-red-400">
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
                                 {/* Exigir cantidad específica de tonos para descuento mayorista */}
